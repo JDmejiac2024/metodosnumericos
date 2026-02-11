@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interpolación de Newton - Métodos Numéricos</title>
+    
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    
+<aside id="sidebar">
+    <div class="sidebar-header">
+        <h2>Métodos Numéricos</h2>
+        <button id="menu-toggle" aria-label="Abrir menú">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    <nav>
+        <a href="../../index.html"><i class="fas fa-home"></i> Inicio</a>
+        
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-compress"></i> Métodos Cerrados</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../cerrados/biseccion.html" class="sub-link">Bisección</a>
+                <a href="../cerrados/reglaFalsa.html" class="sub-link">Regla Falsa</a>
+            </div>
+        </div>
+
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-expand-arrows-alt"></i> Métodos Abiertos</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../abiertos/newton.html" class="sub-link">Newton-Raphson</a>
+                <a href="../abiertos/secante.html" class="sub-link">Secante</a>
+                <a href="../abiertos/puntofijo.html" class="sub-link">Punto Fijo</a>
+                <a href="../abiertos/raices_multiples.html" class="sub-link">Raíces Múltiples</a>
+                <a href="../abiertos/secante_modificado.html" class="sub-link">Secante Modificado</a>
+                <a href="../abiertos/steffensen.html" class="sub-link">Steffensen</a>
+            </div>
+        </div>
+        
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-equals"></i> Sistemas Ec.</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../sistemas/jacobi.html" class="sub-link">Jacobi</a>
+                <a href="../sistemas/gauss_seidel.html" class="sub-link">Gauss-Seidel</a>
+                <a href="../sistemas/eliminacion_gaussiana.html" class="sub-link">Eliminación Gaussiana</a>
+                <a href="../sistemas/gauss_jordan.html" class="sub-link">Gauss-Jordan</a>
+                <a href="../sistemas/factorizacion_lu.html" class="sub-link">Factorización LU</a>
+            </div>
+        </div>
+
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-chart-line"></i> Interpolación</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../interpolacion/newton.html" class="sub-link">Newton (Diferencias)</a>
+                <a href="../interpolacion/lagrange.html" class="sub-link">Lagrange</a>
+            </div>
+        </div>
+        
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-square-root-alt"></i> Raíces Polinomios</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../raices/muller.html" class="sub-link">Método de Müller</a>
+                <a href="../raices/bairstow.html" class="sub-link">Método de Bairstow</a>
+            </div>
+        </div>
+    </nav>
+</aside>
+    <main id="main-content">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>Interpolación de Newton (Diferencias Divididas)</h1>
+            <button onclick="exportarPDF()">📄 Guardar Reporte PDF</button>
+        </header>
+
+        <section class="card">
+            <h3>Datos de los Puntos</h3>
+            <div class="input-group" style="align-items: flex-end;">
+                <div class="form-control">
+                    <label for="puntos">Número de Puntos (n):</label>
+                    <input type="number" id="cantidadPuntos" value="4" min="2" max="10">
+                </div>
+                <div class="form-control">
+                    <button class="btn-calculate" onclick="generarInputsPuntos()" style="padding: 10px;">
+                        <i class="fas fa-list-ol"></i> Generar Tabla
+                    </button>
+                </div>
+            </div>
+
+            <div id="puntos-container" style="margin-top: 20px; overflow-x: auto;"></div>
+            
+            <div class="input-group" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
+                <div class="form-control">
+                    <label for="valX">Evaluar en X = ? (Opcional):</label>
+                    <input type="number" id="valX" placeholder="Ej: 2.5">
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-calculate" onclick="calcularInterpolacion()">Calcular Polinomio</button>
+                <button class="btn-clear" onclick="borrarDatos()">Borrar Todo</button>
+            </div>
+            
+            <p id="error-msg"></p>
+        </section>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+            <section class="card">
+                <h3>Resultados del Polinomio</h3>
+                <div id="resultado-polinomio" style="margin-bottom: 15px; font-family: 'Consolas', monospace; color: var(--primary-dark); font-weight: bold;"></div>
+                <div id="resultado-evaluacion" style="margin-bottom: 15px; color: var(--action-success); font-weight: bold;"></div>
+                
+                <h4>Tabla de Diferencias Divididas</h4>
+                <div style="overflow-x: auto; max-height: 300px; margin-top: 10px;">
+                    <table id="tabla-diferencias">
+                        <thead>
+                            <tr id="headers-tabla"></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3>Gráfica del Polinomio</h3>
+                <div style="position: relative; height: 350px; width: 100%;">
+                    <canvas id="graficaInterpolacion"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <section class="card" style="margin-top: 20px;">
+            <h3>Procedimiento Paso a Paso</h3>
+            <div id="paso-a-paso" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto; font-family: 'Consolas', monospace; color: var(--text-secondary); background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid var(--border);"></div>
+        </section>
+
+    </main>
+
+    <script src="../../js/main.js"></script>
+    <script src="../../js/methods/newton_int.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            generarInputsPuntos(); // Inicializar con 4 puntos
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Métodos Numéricos</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <h2>Métodos Numéricos</h2>
+            <button id="menu-toggle" aria-label="Abrir menú">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <nav>
+            <a href="index.html" id="link-inicio" class="active"><i class="fas fa-home"></i> Inicio</a>
+            
+            <div class="nav-dropdown">
+                <button class="dropdown-btn">
+                    <span><i class="fas fa-compress"></i> Métodos Cerrados</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="pages/cerrados/biseccion.html" class="sub-link">Bisección</a>
+                    <a href="pages/cerrados/reglaFalsa.html" class="sub-link">Regla Falsa</a>
+                </div>
+            </div>
+
+            <div class="nav-dropdown">
+                <button class="dropdown-btn">
+                    <span><i class="fas fa-expand-arrows-alt"></i> Métodos Abiertos</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="pages/abiertos/newton.html" class="sub-link">Newton-Raphson</a>
+                    <a href="pages/abiertos/secante.html" class="sub-link">Secante</a>
+                    <a href="pages/abiertos/puntoFijo.html" class="sub-link">Punto Fijo</a>
+                    <a href="pages/abiertos/raices_multiples.html" class="sub-link">Raíces Múltiples</a>
+                    <a href="pages/abiertos/secante_modificado.html" class="sub-link">Secante Modificado</a>
+                    <a href="pages/abiertos/steffensen.html" class="sub-link">Steffensen</a>
+                </div>
+            </div>
+
+            <div class="nav-dropdown">
+                <button class="dropdown-btn">
+                    <span><i class="fas fa-equals"></i> Sistemas Ec.</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="pages/sistemas/jacobi.html" class="sub-link">Jacobi</a>
+                    <a href="pages/sistemas/gauss_seidel.html" class="sub-link">Gauss-Seidel</a>
+                    <a href="pages/sistemas/eliminacion_gaussiana.html" class="sub-link">Eliminación Gaussiana</a>
+                    <a href="pages/sistemas/gauss_jordan.html" class="sub-link">Gauss-Jordan</a>
+                    <a href="pages/sistemas/factorizacion_lu.html" class="sub-link">Factorización LU</a>
+                </div>
+            </div>
+
+            <div class="nav-dropdown">
+                <button class="dropdown-btn">
+                    <span><i class="fas fa-chart-line"></i> Interpolación</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="pages/interpolacion/newton.html" class="sub-link">Newton (Diferencias)</a>
+                    <a href="pages/interpolacion/lagrange.html" class="sub-link">Lagrange</a>
+                </div>
+            </div>
+
+            <div class="nav-dropdown">
+                <button class="dropdown-btn">
+                    <span><i class="fas fa-square-root-alt"></i> Raíces Polinomios</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="pages/raices/muller.html" class="sub-link">Método de Müller</a>
+                    <a href="pages/raices/bairstow.html" class="sub-link">Método de Bairstow</a>
+                </div>
+            </div>
+        </nav>
+    </aside>
+
+    <main id="main-content">
+        <header>
+            <h1>Bienvenido al Panel de Métodos Numéricos</h1>
+            <p>Selecciona un algoritmo para comenzar a resolver problemas de ingeniería.</p>
+        </header>
+
+        <div class="dashboard-grid">
+            
+            <div class="card hover-effect">
+                <h3><i class="fas fa-compress"></i> Métodos Cerrados</h3>
+                <p>Algoritmos que requieren un intervalo inicial que contenga una raíz.</p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-secondary); line-height: 1.8;">
+                    <li>
+                        <a href="pages/cerrados/biseccion.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Bisección <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/cerrados/reglaFalsa.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Regla Falsa <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card hover-effect">
+                <h3><i class="fas fa-expand-arrows-alt"></i> Métodos Abiertos</h3>
+                <p>Algoritmos de convergencia rápida que requieren puntos de inicio arbitrarios.</p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-secondary); line-height: 1.8;">
+                    <li>
+                        <a href="pages/abiertos/newton.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Newton-Raphson <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/abiertos/secante.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Método de la Secante <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/abiertos/puntoFijo.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Punto Fijo <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/abiertos/raices_multiples.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Raíces Múltiples <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/abiertos/secante_modificado.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Secante Modificado <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/abiertos/steffensen.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Método de Steffensen <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card hover-effect">
+                <h3><i class="fas fa-equals"></i> Sistemas de Ecuaciones</h3>
+                <p>Solución de sistemas lineales mediante métodos iterativos y directos.</p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-secondary); line-height: 1.8;">
+                    <li>
+                        <a href="pages/sistemas/jacobi.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Método de Jacobi <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/sistemas/gauss_seidel.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Gauss-Seidel <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/sistemas/eliminacion_gaussiana.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Eliminación Gaussiana <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/sistemas/gauss_jordan.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Gauss-Jordan <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/sistemas/factorizacion_lu.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Factorización LU <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card hover-effect">
+                <h3><i class="fas fa-chart-line"></i> Interpolación</h3>
+                <p>Construcción de nuevos puntos de datos dentro del rango de un conjunto discreto.</p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-secondary); line-height: 1.8;">
+                    <li>
+                        <a href="pages/interpolacion/newton.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Newton (Diferencias) <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/interpolacion/lagrange.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Lagrange <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card hover-effect">
+                <h3><i class="fas fa-square-root-alt"></i> Raíces de Polinomios</h3>
+                <p>Métodos especializados para encontrar raíces reales y complejas de polinomios.</p>
+                <ul style="margin: 20px 0 20px 20px; color: var(--text-secondary); line-height: 1.8;">
+                    <li>
+                        <a href="pages/raices/muller.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Método de Müller <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/raices/bairstow.html" style="text-decoration: none; color: var(--primary-mid); font-weight: 600;">
+                            Método de Bairstow <i class="fas fa-arrow-right" style="font-size: 0.8em;"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card hover-effect" style="border-top: 4px solid #1F3A5F;"> 
+                <h3><i class="fas fa-users"></i> Créditos del Proyecto</h3>
+    
+                <div style="text-align: center; margin: 15px 0;">
+                    <img src="assets/logo.png" 
+                         alt="Logo Universidad" 
+                         style="max-width: 80px; height: auto; margin-bottom: 10px;">
+                    <p style="font-weight: bold; color: var(--primary-dark); margin-bottom: 5px;">Universidad Mariano Gálvez</p>
+                </div>
+
+                <ul style="list-style: none; padding: 0; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                    <li style="margin-bottom: 8px;">
+                        <i class="fas fa-graduation-cap" style="color: var(--primary-mid); width: 20px;"></i>
+                        <strong>Carrera:</strong> Ingeniería en Sistemas
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                        <i class="fas fa-book" style="color: var(--primary-mid); width: 20px;"></i>
+                        <strong>Curso:</strong> Métodos Numéricos
+                    </li>
+                    <li style="margin-bottom: 15px;">
+                        <i class="fas fa-chalkboard-teacher" style="color: var(--primary-mid); width: 20px;"></i>
+                        <strong>Catedrática:</strong> Ing. Candi Peralta Pleitez
+                    </li>
+
+                    <li style="border-top: 1px solid var(--border); padding-top: 10px; font-weight: bold; color: var(--primary-dark);">
+                        Integrantes:
+                    </li>
+                    <li style="padding-left: 25px; margin-top: 5px;">
+                        <i class="fas fa-user" style="font-size: 0.8em; color: var(--text-disabled);"></i> Juan Diego Mejía Contreras
+                    </li>
+                    <li style="padding-left: 25px; margin-top: 5px;">
+                        <i class="fas fa-user" style="font-size: 0.8em; color: var(--text-disabled);"></i> Allan Jouell Barrios Flamenco
+                    </li>
+                </ul>
+            </div>
+            
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

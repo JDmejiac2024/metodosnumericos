@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punto Fijo - Métodos Numéricos</title>
+    
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    
+ <aside id="sidebar">
+    <div class="sidebar-header">
+        <h2>Métodos Numéricos</h2>
+        <button id="menu-toggle" aria-label="Abrir menú">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    <nav>
+        <a href="../../index.html"><i class="fas fa-home"></i> Inicio</a>
+        
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-compress"></i> Métodos Cerrados</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../cerrados/biseccion.html" class="sub-link">Bisección</a>
+                <a href="../cerrados/reglaFalsa.html" class="sub-link">Regla Falsa</a>
+            </div>
+        </div>
+
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-expand-arrows-alt"></i> Métodos Abiertos</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../abiertos/newton.html" class="sub-link">Newton-Raphson</a>
+                <a href="../abiertos/secante.html" class="sub-link">Secante</a>
+                <a href="../abiertos/puntofijo.html" class="sub-link">Punto Fijo</a>
+                <a href="../abiertos/raices_multiples.html" class="sub-link">Raíces Múltiples</a>
+                <a href="../abiertos/secante_modificado.html" class="sub-link">Secante Modificado</a>
+                <a href="../abiertos/steffensen.html" class="sub-link">Steffensen</a>
+            </div>
+        </div>
+        
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-equals"></i> Sistemas Ec.</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../sistemas/jacobi.html" class="sub-link">Jacobi</a>
+                <a href="../sistemas/gauss_seidel.html" class="sub-link">Gauss-Seidel</a>
+                <a href="../sistemas/eliminacion_gaussiana.html" class="sub-link">Eliminación Gaussiana</a>
+                <a href="../sistemas/gauss_jordan.html" class="sub-link">Gauss-Jordan</a>
+                <a href="../sistemas/factorizacion_lu.html" class="sub-link">Factorización LU</a>
+            </div>
+        </div>
+
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-chart-line"></i> Interpolación</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../interpolacion/newton.html" class="sub-link">Newton (Diferencias)</a>
+                <a href="../interpolacion/lagrange.html" class="sub-link">Lagrange</a>
+            </div>
+        </div>
+        
+        <div class="nav-dropdown">
+            <button class="dropdown-btn">
+                <span><i class="fas fa-square-root-alt"></i> Raíces Polinomios</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="../raices/muller.html" class="sub-link">Método de Müller</a>
+                <a href="../raices/bairstow.html" class="sub-link">Método de Bairstow</a>
+            </div>
+        </div>
+    </nav>
+</aside>
+
+    <main id="main-content">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>Método de Punto Fijo</h1>
+            <button onclick="exportarPDF()">📄 Guardar Reporte PDF</button>
+        </header>
+
+        <section class="card">
+            <h3>Entrada de Datos</h3>
+            <div class="input-group">
+                <div class="form-control">
+                    <label for="func">Función f(x) (Opcional):</label>
+                    <input type="text" id="func" placeholder="Ej: x^2 - 2*x - 3" autocomplete="off">
+                    <small>Solo para verificar la raíz.</small>
+                </div>
+                
+                <div class="form-control">
+                    <label for="gx" style="color: var(--action-success);">Función Despejada g(x):</label>
+                    <input type="text" id="gx" placeholder="Ej: sqrt(2*x + 3)" autocomplete="off" style="border-color: var(--action-success);">
+                    <small>Iterador: x = g(x)</small>
+                </div>
+
+                <div class="form-control">
+                    <label for="x0">Valor Inicial (x0):</label>
+                    <input type="number" id="x0" step="any" value="4">
+                </div>
+
+                <div class="form-control">
+                    <label for="tol">Tolerancia:</label>
+                    <input type="number" id="tol" step="any" value="0.0001">
+                </div>
+                <div class="form-control">
+                    <label for="maxIter">Máx. Iteraciones:</label>
+                    <input type="number" id="maxIter" value="100">
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-calculate" onclick="calcularPuntoFijo()">Calcular Raíz</button>
+                <button class="btn-clear" onclick="borrarDatos()">Borrar Todo</button>
+            </div>
+            
+            <p id="error-msg"></p>
+        </section>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+            <section class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Tabla de Iteraciones</h3>
+                    <span id="root-result" style="color: var(--primary-dark); font-weight: bold;"></span>
+                </div>
+                <div style="overflow-x: auto; max-height: 400px; margin-top: 10px;">
+                    <table id="tabla-resultados">
+                        <thead>
+                            <tr>
+                                <th>Iter</th>
+                                <th>x_i</th>
+                                <th>g(x_i)</th>
+                                <th>Error %</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3>Gráfica de Convergencia</h3>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="graficaError"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <section class="card" style="margin-top: 20px;">
+            <h3>Procedimiento Paso a Paso</h3>
+            <div id="paso-a-paso" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></div>
+        </section>
+
+    </main>
+
+    <script src="../../js/main.js"></script>
+    <script src="../../js/methods/puntoFijo.js"></script>
+</body>
+</html>

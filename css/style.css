@@ -1,0 +1,546 @@
+@charset "utf-8";
+/* css/style.css - Versión Ingeniería Refinada */
+
+/* =========================================
+   1. VARIABLES Y RESET GLOBAL
+   ========================================= */
+:root {
+    /* --- PALETA DE COLORES (Ingeniería / Educativo) --- */
+    
+    /* AZULES (Identidad y Estructura) */
+    --primary-dark: #1F3A5F;    /* Header, Sidebar, Títulos fuertes */
+    --primary-mid:  #2F6DB3;    /* Enlaces, Estados activos, Foco */
+    
+    /* VERDES (Acción y Éxito) */
+    --action-success: #2FA36B;  /* Botón Calcular, Exportar */
+    --action-hover:   #248457;  /* Hover de botones de acción */
+    
+    /* ALERTAS Y ERRORES */
+    --state-error:   #D64545;   /* Botón Borrar, Mensajes de error */
+    --state-warning: #F4B740;   /* Advertencias, Notas */
+    
+    /* NEUTROS Y FONDOS (Legibilidad) */
+    --bg-body:   #F5F7FA;       /* Fondo general */
+    --bg-card:   #FFFFFF;       /* Fondo de tarjetas */
+    --border:    #E1E6ED;       /* Separadores suaves */
+    
+    /* TEXTO (Jerarquía) */
+    --text-main:      #1C1E21;  /* Títulos, Valores importantes */
+    --text-secondary: #5F6C7B;  /* Etiquetas, Párrafos, Datos de tabla */
+    --text-disabled:  #9AA5B1;  /* Placeholders, Elementos inactivos */
+    --text-on-dark:   #FFFFFF;  /* Texto sobre fondos azules/verdes */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* =========================================
+   2. BARRA LATERAL (SIDEBAR)
+   ========================================= */
+#sidebar {
+    width: 260px;
+    background-color: var(--primary-dark);
+    color: var(--text-disabled);
+    display: flex;
+    flex-direction: column;
+    padding: 25px 20px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(0,0,0,0.05);
+}
+
+#sidebar h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+    color: var(--text-on-dark);
+    letter-spacing: 0.5px;
+}
+
+/* Enlaces normales del menú */
+#sidebar nav a {
+    color: #B0C4DE; /* Gris azulado suave */
+    text-decoration: none;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+#sidebar nav a:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-on-dark);
+    transform: translateX(3px);
+}
+
+#sidebar nav a.active {
+    background-color: var(--primary-mid); 
+    color: var(--text-on-dark);
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* --- ESTILOS DEL MENÚ DESPLEGABLE (DROPDOWN) --- */
+.nav-dropdown {
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.dropdown-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    color: #B0C4DE;
+    padding: 10px 15px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    font-family: inherit;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.dropdown-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-on-dark);
+}
+
+.dropdown-btn.active {
+    color: var(--text-on-dark);
+    font-weight: 600;
+    background-color: rgba(255, 255, 255, 0.05); /* Fondo sutil al estar abierto */
+}
+
+/* Flecha rotatoria */
+.arrow {
+    transition: transform 0.3s ease;
+    font-size: 0.8em;
+}
+
+.dropdown-btn.active .arrow {
+    transform: rotate(180deg);
+}
+
+/* Contenido del Dropdown */
+.dropdown-content {
+    display: none; /* Oculto por defecto */
+    background-color: rgba(0, 0, 0, 0.15); /* Fondo más oscuro */
+    border-radius: 6px;
+    padding: 5px 0;
+    margin-top: 2px;
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+/* Enlaces del submenú */
+.dropdown-content .sub-link {
+    padding-left: 35px !important; /* Sangría */
+    font-size: 0.9rem !important;
+    color: #a0b0c0 !important;
+    margin-bottom: 2px !important;
+}
+
+.dropdown-content .sub-link:hover {
+    color: var(--text-on-dark) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dropdown-content .sub-link.active {
+    color: var(--action-success) !important; /* Verde éxito para sub-link activo */
+    background-color: transparent !important;
+    font-weight: 700 !important;
+}
+
+
+/* =========================================
+   3. CONTENIDO PRINCIPAL
+   ========================================= */
+#main-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+    position: relative;
+}
+
+header {
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    color: var(--primary-dark);
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+header p {
+    color: var(--text-secondary);
+}
+
+/* Botón de Exportar (Header) */
+header button {
+    background-color: var(--primary-mid) !important;
+    color: var(--text-on-dark) !important;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(47, 109, 179, 0.2);
+    font-weight: 600 !important;
+    padding: 8px 16px !important; /* Más compacto */
+    font-size: 0.9rem !important;
+}
+header button:hover {
+    background-color: var(--primary-dark) !important;
+    transform: translateY(-1px);
+}
+
+/* =========================================
+   4. TARJETAS (CARDS)
+   ========================================= */
+.card {
+    background: var(--bg-card);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+    border: 1px solid var(--border);
+}
+
+.card h3 {
+    margin-bottom: 20px;
+    color: var(--primary-dark);
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+}
+
+/* =========================================
+   5. FORMULARIOS E INPUTS
+   ========================================= */
+.input-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.form-control {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-control label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.form-control input {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    background-color: var(--bg-card);
+    transition: all 0.2s;
+}
+
+.form-control input:focus {
+    outline: none;
+    border-color: var(--primary-mid);
+    box-shadow: 0 0 0 3px rgba(47, 109, 179, 0.1);
+}
+
+.form-control small {
+    color: var(--text-disabled);
+    margin-top: 5px;
+    font-size: 0.8rem;
+}
+
+/* =========================================
+   6. BOTONES DE ACCIÓN
+   ========================================= */
+.action-buttons {
+    display: flex;
+    gap: 20px; /* Separación cómoda */
+    margin-top: 25px;
+    justify-content: flex-start; /* Alinear a la izquierda */
+}
+
+/* Estilo común para ambos botones */
+.btn-calculate, .btn-clear {
+    flex: 1; /* Ambos ocupan el mismo ancho (50/50) */
+    max-width: 250px; /* Limitar ancho máximo para que no sean gigantes */
+    padding: 10px 20px; /* Altura más compacta */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Botón Calcular: VERDE */
+.btn-calculate {
+    background-color: var(--action-success);
+    color: var(--text-on-dark);
+    box-shadow: 0 2px 4px rgba(47, 163, 107, 0.2);
+}
+
+.btn-calculate:hover {
+    background-color: var(--action-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(47, 163, 107, 0.3);
+}
+
+/* Botón Borrar: GRIS CLARO CON TEXTO ROJO (Menos agresivo) */
+.btn-clear {
+    background-color: #ffffff;
+    color: var(--state-error);
+    border: 1px solid var(--state-error);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn-clear:hover {
+    background-color: #FEF2F2; /* Rojo muy pálido al hover */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* =========================================
+   7. TABLAS DE RESULTADOS
+   ========================================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+table thead th {
+    background-color: var(--primary-dark);
+    color: var(--text-on-dark);
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid var(--primary-dark); /* Borde igual al fondo */
+}
+
+table tbody td {
+    padding: 8px 10px; /* Celdas más compactas */
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    text-align: center;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #FAFBFC;
+}
+
+table tbody tr:hover {
+    background-color: rgba(47, 109, 179, 0.05);
+}
+
+/* Destacados */
+table td:nth-child(4) { 
+    color: var(--primary-dark);
+    font-weight: 700;
+    background-color: rgba(47, 109, 179, 0.05); /* Columna Raíz resaltada suavemente */
+}
+
+table td:last-child {
+    color: var(--state-error);
+}
+
+/* =========================================
+   8. MENSAJES Y NOTAS
+   ========================================= */
+#error-msg {
+    color: var(--state-error);
+    background-color: #FEF2F2;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 15px;
+    display: block;
+    font-size: 0.9rem;
+    border-left: 4px solid var(--state-error);
+    text-align: left;
+}
+
+#paso-a-paso {
+    background-color: #FAFBFC;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    font-family: 'Consolas', monospace;
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+/* =========================================
+   9. DASHBOARD (Tarjetas de Inicio)
+   ========================================= */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.dashboard-grid .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-top: 4px solid var(--primary-mid);
+}
+
+.dashboard-grid .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    border-top-color: var(--action-success);
+}
+
+.dashboard-grid h3 i {
+    color: var(--primary-mid);
+    margin-right: 10px;
+}
+
+/* =========================================
+   10. RESPONSIVIDAD (MENÚ MÓVIL CORREGIDO)
+   ========================================= */
+
+/* Estilos base del botón hamburguesa (Oculto en Desktop) */
+#menu-toggle {
+    display: none;
+}
+
+.sidebar-header {
+    width: 100%;
+}
+
+/* Reglas para pantallas pequeñas (Tablets y Celulares) */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+        overflow: auto; /* Permitir scroll vertical en la página completa */
+    }
+
+    #sidebar {
+        width: 100%;
+        height: auto;
+        padding: 15px 20px;
+        flex-direction: column; /* Cambiamos a columna para que el menú baje */
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        position: relative;
+        z-index: 1000;
+        flex-shrink: 0;
+    }
+
+    /* Cabecera del sidebar que contiene Título + Botón */
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+    
+    #sidebar h2 {
+        margin: 0;
+        border: none;
+        padding: 0;
+        text-align: left;
+        font-size: 1.1rem;
+    }
+
+    /* Botón Hamburguesa VISIBLE en móvil */
+    #menu-toggle {
+        display: block; 
+        background: none;
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    
+    #menu-toggle:hover {
+        background-color: rgba(255,255,255,0.1);
+    }
+
+    /* El menú de navegación (Oculto por defecto) */
+    #sidebar nav {
+        display: none; 
+        width: 100%;
+        flex-direction: column;
+        margin-top: 15px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 15px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    /* CLASE ACTIVA: Cuando JS agregue 'active', el menú se muestra */
+    #sidebar nav.active {
+        display: flex;
+    }
+
+    /* Ajustes del contenido principal en móvil */
+    #main-content {
+        padding: 20px;
+    }
+
+    .input-group {
+        grid-template-columns: 1fr;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-calculate, .btn-clear {
+        max-width: 100%;
+        width: 100%;
+        flex: none;
+    }
+
+    .dashboard-grid { 
+        grid-template-columns: 1fr; 
+    }
+}
+
+/* Animación suave para el menú */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
