@@ -31,7 +31,7 @@ function calcularSecante() {
 
     let x_prev = parseFloat(x0Input); // x_{i-1}
     let x_curr = parseFloat(x1Input); // x_i
-    const tol = parseFloat(tolInput) || 0.0001;
+    const tol = parseFloat(tolInput) || 0.001;
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {

@@ -33,7 +33,7 @@ function calcularBairstow() {
     const grado = parseInt(document.getElementById('grado').value);
     const r0 = parseFloat(document.getElementById('valR').value) || 0;
     const s0 = parseFloat(document.getElementById('valS').value) || 0;
-    const tol = parseFloat(document.getElementById('tol').value) || 0.0001;
+    const tol = parseFloat(document.getElementById('tol').value) || 0.001;
     const maxIter = parseInt(document.getElementById('maxIter').value) || 100;
 
     const tablaBody = document.querySelector('#tabla-raices tbody');

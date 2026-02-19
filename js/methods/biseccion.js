@@ -35,7 +35,7 @@ function calcularBiseccion() {
     // Convertir a números
     let xi = parseFloat(xiInput);
     let xu = parseFloat(xuInput);
-    const tol = parseFloat(tolInput) || 0.0001; // Valor por defecto
+    const tol = parseFloat(tolInput) || 0.001; // Valor por defecto
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {

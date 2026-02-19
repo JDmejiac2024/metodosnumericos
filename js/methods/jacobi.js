@@ -42,7 +42,7 @@ function crearMatrizInput() {
 // 2. Función Principal: Calcular Jacobi
 function calcularJacobi() {
     const n = currentDim;
-    const tol = parseFloat(document.getElementById('tol').value) || 0.0001;
+    const tol = parseFloat(document.getElementById('tol').value) || 0.001;
     const maxIter = parseInt(document.getElementById('maxIter').value) || 100;
     
     const tbody = document.querySelector('#tabla-resultados tbody');

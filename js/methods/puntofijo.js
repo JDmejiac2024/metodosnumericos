@@ -30,7 +30,7 @@ function calcularPuntoFijo() {
     }
 
     let xi = parseFloat(x0Input);
-    const tol = parseFloat(tolInput) || 0.0001;
+    const tol = parseFloat(tolInput) || 0.001;
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {

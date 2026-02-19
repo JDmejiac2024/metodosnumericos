@@ -31,7 +31,7 @@ function calcularSecanteMod() {
 
     let xi = parseFloat(x0Input);
     const delta = parseFloat(deltaInput);
-    const tol = parseFloat(tolInput) || 0.0001;
+    const tol = parseFloat(tolInput) || 0.001;
     const maxIter = parseInt(maxIterInput) || 100;
 
     if (delta === 0) {

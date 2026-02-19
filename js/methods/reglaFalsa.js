@@ -30,7 +30,7 @@ function calcularReglaFalsa() {
 
     let xi = parseFloat(xiInput); // a
     let xu = parseFloat(xuInput); // b
-    const tol = parseFloat(tolInput) || 0.0001;
+    const tol = parseFloat(tolInput) || 0.001;
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {

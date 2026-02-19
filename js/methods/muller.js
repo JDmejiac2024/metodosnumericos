@@ -9,7 +9,7 @@ function calcularMuller() {
     const x0Val = parseFloat(document.getElementById('x0').value);
     const x1Val = parseFloat(document.getElementById('x1').value);
     const x2Val = parseFloat(document.getElementById('x2').value);
-    const tol = parseFloat(document.getElementById('tol').value) || 0.0001;
+    const tol = parseFloat(document.getElementById('tol').value) || 0.001;
     const maxIter = parseInt(document.getElementById('maxIter').value) || 100;
 
     const tbody = document.querySelector('#tabla-resultados tbody');
