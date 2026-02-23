@@ -44,16 +44,22 @@ function calcularRaicesMultiples() {
         while (error > tol && iter < maxIter) {
             const f_xi = f(xi);
             
-            // --- CORRECCIÓN: Si ya encontramos la raíz, detenerse ---
+            // --- CORRECCIÓN: Si ya encontramos la raíz exacta ---
             if (Math.abs(f_xi) < 1e-12) {
                 pasosLog += `\n¡Raíz exacta encontrada antes de dividir por cero!\n`;
-                // Forzar salida exitosa
                 error = 0;
-                // Agregamos la fila final para visualización
-                tbody.innerHTML += `<tr><td>${iter + 1}</td><td>${xi.toFixed(6)}</td><td>0.000</td><td>0%</td></tr>`;
+                // Fila final para visualización
+                tbody.innerHTML += `<tr>
+                    <td>${iter + 1}</td>
+                    <td>${xi.toFixed(4)}</td>
+                    <td>0.0000</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td style="font-weight:bold; color:#2C3E50">${xi.toFixed(4)}</td>
+                    <td>0.0000%</td>
+                </tr>`;
                 break; 
             }
-            // --------------------------------------------------------
 
             const df_xi = df(xi);
             const d2f_xi = d2f(xi);
@@ -63,12 +69,11 @@ function calcularRaicesMultiples() {
 
             // Evitar división por cero
             if (Math.abs(denominador) < 1e-12) {
-                // Si el denominador es 0 pero f(x) es pequeño, asumimos que es la raíz
                 if(Math.abs(f_xi) < tol * 10) {
                      error = 0;
                      break; 
                 }
-                msgError.textContent = `Error: El denominador se hizo cero en x=${xi}.`;
+                msgError.textContent = `Error: El denominador se hizo cero en x=${xi.toFixed(4)}.`;
                 pasosLog += `\nCRITICAL ERROR: Denominador ≈ 0 en iteración ${iter+1}.`;
                 pasoDiv.textContent = pasosLog;
                 return;
@@ -85,17 +90,26 @@ function calcularRaicesMultiples() {
             }
             if (iter === 0) error = 100;
 
+            // Tabla (7 Columnas a 4 decimales)
             const fila = `
                 <tr>
                     <td>${iter + 1}</td>
-                    <td>${xi.toFixed(6)}</td>
-                    <td>${f_xi.toExponential(3)}</td>
+                    <td>${xi.toFixed(4)}</td>
+                    <td>${f_xi.toFixed(4)}</td>
+                    <td>${df_xi.toFixed(4)}</td>
+                    <td>${d2f_xi.toFixed(4)}</td>
+                    <td style="font-weight:bold; color:#2C3E50">${xi_new.toFixed(4)}</td>
                     <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
 
-            pasosLog += `Iteración ${iter + 1}:\n  x_i = ${xi.toFixed(6)}\n  f(x_i) = ${f_xi.toExponential(3)}\n  Error = ${error.toFixed(4)}%\n\n`;
+            // Paso a Paso (4 decimales)
+            pasosLog += `Iteración ${iter + 1}:\n`;
+            pasosLog += `  x_i = ${xi.toFixed(4)}\n`;
+            pasosLog += `  f(x_i) = ${f_xi.toFixed(4)}, f'(x_i) = ${df_xi.toFixed(4)}, f''(x_i) = ${d2f_xi.toFixed(4)}\n`;
+            pasosLog += `  x_{i+1} = ${xi_new.toFixed(4)}\n`;
+            pasosLog += `  Error = ${iter === 0 ? '-' : error.toFixed(4) + '%'}\n\n`;
 
             xi = xi_new;
             labels.push(iter + 1);
@@ -103,9 +117,9 @@ function calcularRaicesMultiples() {
             iter++;
         }
 
-        pasosLog += `\n--- FIN DEL PROCESO ---\nRaíz aproximada: ${xi.toFixed(6)}`;
+        pasosLog += `\n--- FIN DEL PROCESO ---\nRaíz aproximada: ${xi.toFixed(4)}`;
         pasoDiv.textContent = pasosLog;
-        rootResult.textContent = `Raíz: ${xi.toFixed(6)}`;
+        rootResult.textContent = `Raíz: ${xi.toFixed(4)}`;
         
         generarGrafica(labels, dataError);
 
@@ -119,6 +133,8 @@ function borrarDatos() {
     document.getElementById('deriv1').value = '';
     document.getElementById('deriv2').value = '';
     document.getElementById('x0').value = '';
+    document.getElementById('tol').value = '0.001';
+    document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
@@ -140,10 +156,19 @@ function generarGrafica(labels, data) {
                 borderColor: '#D64545',
                 backgroundColor: 'rgba(47, 109, 179, 0.1)',
                 fill: true,
+                borderWidth: 2,
+                pointRadius: 4,
                 tension: 0.2
             }]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { 
+                y: { beginAtZero: true, title: { display: true, text: 'Porcentaje de Error' } },
+                x: { title: { display: true, text: 'Iteración' } }
+            } 
+        }
     });
 }
 
@@ -163,30 +188,34 @@ function exportarPDF() {
     doc.text(`Función: ${document.getElementById('func').value}`, 14, 30);
     doc.text(`Raíz Aprox: ${document.getElementById('root-result').textContent}`, 14, 38);
 
-    // Tabla
-    doc.autoTable({ html: '#tabla-resultados', startY: 45, theme: 'grid', headStyles: { fillColor: [31, 58, 95] } });
+    // Tabla - Ajuste de fuente a 8 para que quepan las 7 columnas cómodamente
+    doc.autoTable({ 
+        html: '#tabla-resultados', 
+        startY: 45, 
+        theme: 'grid', 
+        headStyles: { fillColor: [31, 58, 95] },
+        styles: { fontSize: 8, cellPadding: 2 } 
+    });
 
     // Gráfica con Título
     const canvas = document.getElementById('graficaError');
     if(canvas){
         const imgData = canvas.toDataURL('image/png');
         
-        // Calcular posición después de la tabla
-        let finalY = doc.lastAutoTable.finalY + 15; // Un poco más de espacio
-        
-        // Verificar si cabe en la página, si no, nueva página
-        if (finalY + 90 > doc.internal.pageSize.height) { 
+        let finalY = doc.lastAutoTable.finalY + 15; 
+        const pageHeight = doc.internal.pageSize.height;
+        const imgHeight = 80;
+
+        if (finalY + imgHeight > pageHeight) { 
             doc.addPage(); 
             finalY = 20; 
         }
         
-        // --- AGREGAR TÍTULO DE LA GRÁFICA (AQUÍ ESTÁ EL CAMBIO) ---
         doc.setFontSize(14); 
-        doc.setTextColor(31, 58, 95); // Mismo azul del título principal
+        doc.setTextColor(31, 58, 95); 
         doc.text("Gráfica de Convergencia", 14, finalY);
         
-        // Insertar imagen debajo del título
-        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
+        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     
     doc.save("RaicesMultiples_Reporte.pdf");

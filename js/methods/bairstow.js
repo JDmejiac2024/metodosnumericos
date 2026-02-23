@@ -20,7 +20,7 @@ function generarInputsCoeficientes() {
     for (let i = grado; i >= 0; i--) {
         html += `<div style="display:flex; flex-direction:column; align-items:center;">
                     <label style="font-size:0.8em; margin-bottom:2px;">x<sup>${i}</sup></label>
-                    <input type="number" id="coef_${i}" class="matrix-input" value="1" style="width: 70px;">
+                    <input type="number" id="coef_${i}" class="matrix-input" value="1" style="width: 70px; text-align: center;">
                  </div>`;
         if (i > 0) html += '<span style="font-size:1.2em; font-weight:bold;">+</span>';
     }
@@ -33,7 +33,7 @@ function calcularBairstow() {
     const grado = parseInt(document.getElementById('grado').value);
     const r0 = parseFloat(document.getElementById('valR').value) || 0;
     const s0 = parseFloat(document.getElementById('valS').value) || 0;
-    const tol = parseFloat(document.getElementById('tol').value) || 0.001;
+    const tol = parseFloat(document.getElementById('tol').value) || 0.001; // Estandarizado a 0.001
     const maxIter = parseInt(document.getElementById('maxIter').value) || 100;
 
     const tablaBody = document.querySelector('#tabla-raices tbody');
@@ -68,8 +68,6 @@ function calcularBairstow() {
     let raices = [];
     let log = "--- INICIO MÉTODO DE BAIRSTOW ---\n\n";
 
-    let iterTotal = 0;
-
     // --- BUCLE PRINCIPAL (Deflación) ---
     while (n >= 3) {
         let r = r0;
@@ -99,16 +97,12 @@ function calcularBairstow() {
                 c[i] = b[i] + r * c[i-1] + s * c[i-2];
             }
 
-            // Sistema de ecuaciones para dr y ds
-            // c[n-2]*dr + c[n-3]*ds = -b[n-1]
-            // c[n-1]*dr + c[n-2]*ds = -b[n]
-            
             let det = c[n-2] * c[n-2] - c[n-1] * c[n-3];
             
             if (Math.abs(det) < 1e-12) {
                 log += "  ! Determinante cercano a cero. Ajustando r, s aleatoriamente.\n";
                 r += 0.1; s += 0.1; // Perturbación simple
-                det = 1; // Evitar división por cero en siguiente paso (falso pero permite continuar)
+                det = 1; 
                 continue; 
             }
 
@@ -132,11 +126,8 @@ function calcularBairstow() {
         
         log += `  Raíces: ${formatoComplejo(x1)}, ${formatoComplejo(x2)}\n\n`;
 
-        // Deflación: El nuevo polinomio son los coeficientes 'b' (sin los residuos)
-        // b tiene n+1 elementos. b[n] y b[n-1] son residuos.
-        // El nuevo grado es n-2.
+        // Deflación
         let nuevosCoefs = [];
-        // División sintética final con los r, s óptimos para asegurar precisión
         let b = new Array(n + 1).fill(0);
         b[0] = coefs[0];
         b[1] = coefs[1] + r * b[0];
@@ -153,28 +144,32 @@ function calcularBairstow() {
 
     // --- RESOLVER RESTO (Cuadrático o Lineal) ---
     if (n === 2) {
-        log += `>>> Resolviendo cuadrática final: ${coefs[0]}x² + ${coefs[1]}x + ${coefs[2]}\n`;
+        log += `>>> Resolviendo cuadrática final: ${coefs[0].toFixed(4)}x² + ${coefs[1].toFixed(4)}x + ${coefs[2].toFixed(4)}\n`;
         let [x1, x2] = resolverCuadratica(coefs[0], coefs[1], coefs[2]);
         raices.push(x1, x2);
         log += `  Raíces: ${formatoComplejo(x1)}, ${formatoComplejo(x2)}\n`;
     } else if (n === 1) {
-        log += `>>> Resolviendo lineal final: ${coefs[0]}x + ${coefs[1]}\n`;
-        // ax + b = 0  ->  x = -b/a
+        log += `>>> Resolviendo lineal final: ${coefs[0].toFixed(4)}x + ${coefs[1].toFixed(4)}\n`;
         let val = -coefs[1] / coefs[0];
         raices.push({re: val, im: 0});
-        log += `  Raíz: ${val.toFixed(5)}\n`;
+        log += `  Raíz: ${val.toFixed(4)}\n`;
     }
 
-    // --- MOSTRAR RESULTADOS ---
+    // --- MOSTRAR RESULTADOS EN TABLA ---
     divPasos.textContent = log;
     raicesGlobales = raices; // Guardar para PDF
 
     raices.forEach((r, i) => {
+        // Limpiar -0.0000
+        let reClean = Math.abs(r.re) < 1e-10 ? 0 : r.re;
+        let imClean = Math.abs(r.im) < 1e-10 ? 0 : r.im;
+        
         tablaBody.innerHTML += `
             <tr>
-                <td>x${i+1}</td>
-                <td>${r.re.toFixed(6)}</td>
-                <td>${r.im.toFixed(6)}i</td>
+                <td style="font-weight:bold; color:var(--text-secondary);">x<sub>${i+1}</sub></td>
+                <td style="font-family: monospace;">${reClean.toFixed(4)}</td>
+                <td style="font-family: monospace;">${imClean.toFixed(4)}i</td>
+                <td style="font-family: monospace; font-weight:bold; color:var(--primary-dark);">${formatoComplejo({re: reClean, im: imClean})}</td>
             </tr>
         `;
     });
@@ -182,7 +177,7 @@ function calcularBairstow() {
     generarGraficaBairstow(a);
 }
 
-// Auxiliares
+// Auxiliares Matemáticos
 function resolverCuadratica(a, b, c) {
     let disc = b*b - 4*a*c;
     let r1, r2;
@@ -197,8 +192,10 @@ function resolverCuadratica(a, b, c) {
 }
 
 function formatoComplejo(n) {
-    if (Math.abs(n.im) < 1e-6) return n.re.toFixed(5);
-    return `${n.re.toFixed(5)} ${n.im >= 0 ? '+' : '-'} ${Math.abs(n.im).toFixed(5)}i`;
+    let re = Math.abs(n.re) < 1e-10 ? 0 : n.re;
+    let im = Math.abs(n.im) < 1e-10 ? 0 : n.im;
+    if (im === 0) return re.toFixed(4);
+    return `${re.toFixed(4)} ${im >= 0 ? '+' : '-'} ${Math.abs(im).toFixed(4)}i`;
 }
 
 function construirPolinomioStr(a) {
@@ -207,13 +204,14 @@ function construirPolinomioStr(a) {
     for (let i = 0; i <= n; i++) {
         let coef = a[i];
         if (coef === 0) continue;
-        let signo = (coef >= 0 && i !== 0) ? " + " : " ";
+        let signo = (coef >= 0 && i !== 0) ? " + " : (i === 0 && coef < 0 ? "-" : " - ");
         let exp = (n - i) > 1 ? `x^${n-i}` : ((n-i) === 1 ? "x" : "");
-        str += `${signo}${coef}${exp}`;
+        str += `${signo}${Math.abs(coef)}${exp}`;
     }
     return str;
 }
 
+// Gráfica
 function generarGraficaBairstow(coefs) {
     const ctx = document.getElementById('graficaBairstow').getContext('2d');
     if (chartInstance) chartInstance.destroy();
@@ -242,13 +240,12 @@ function generarGraficaBairstow(coefs) {
         dataY.push(evaluarP(x));
     }
 
-    // Dataset para puntos de raíces reales
     let puntosRaices = reales.map(r => ({x: r, y: 0}));
 
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels, // Esto es referencial para chartjs line
+            labels: labels, 
             datasets: [
                 {
                     label: 'P(x)',
@@ -263,14 +260,14 @@ function generarGraficaBairstow(coefs) {
                     label: 'Raíces Reales',
                     data: puntosRaices,
                     type: 'scatter',
-                    backgroundColor: '#D64545',
-					backgroundColor: 'rgba(47, 109, 179, 0.1)',
+                    backgroundColor: '#D64545', // Corregido: se eliminó el duplicado
                     pointRadius: 6
                 }
             ]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 x: { 
                     type: 'linear', 
@@ -288,24 +285,31 @@ function borrarDatos() {
     document.querySelector('#tabla-raices tbody').innerHTML = '';
     document.getElementById('polinomio-display').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
+    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('valR').value = '0.5';
+    document.getElementById('valS').value = '0.5';
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
 }
 
 function exportarPDF() {
+    const tbody = document.querySelector('#tabla-raices tbody');
+    if (tbody.children.length === 0) { alert("Sin resultados para exportar."); return; }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
     doc.setFontSize(18); doc.setTextColor(31, 58, 95);
     doc.text("Reporte: Método de Bairstow", 14, 20);
     
-    doc.setFontSize(10); doc.setTextColor(0);
+    doc.setFontSize(11); doc.setTextColor(0);
     doc.text(document.getElementById('polinomio-display').textContent, 14, 30);
 
     doc.autoTable({ 
         html: '#tabla-raices', 
         startY: 40,
         theme: 'grid',
-        headStyles: { fillColor: [31, 58, 95] }
+        headStyles: { fillColor: [31, 58, 95] },
+        styles: { fontSize: 10, cellPadding: 2 }
     });
 
     const canvas = document.getElementById('graficaBairstow');

@@ -39,7 +39,7 @@ function crearMatrizInput() {
 // 2. Función Principal: Calcular Gauss-Seidel
 function calcularGaussSeidel() {
     const n = currentDim;
-    const tol = parseFloat(document.getElementById('tol').value) || 0.001;
+    const tol = parseFloat(document.getElementById('tol').value) || 0.001; // Estandarizado a 0.001
     const maxIter = parseInt(document.getElementById('maxIter').value) || 100;
     
     const tbody = document.querySelector('#tabla-resultados tbody');
@@ -140,12 +140,12 @@ function calcularGaussSeidel() {
 
         if(iter === 0) error = 100; 
 
-        // Tabla
+        // Tabla con 4 decimales
         let rowHtml = `<td>${iter + 1}</td>`;
         for(let i=0; i<n; i++) {
-            rowHtml += `<td>${x[i].toFixed(5)}</td>`;
+            rowHtml += `<td style="font-weight:bold; color:#2C3E50">${x[i].toFixed(4)}</td>`;
         }
-        rowHtml += `<td>${error.toFixed(5)}</td>`;
+        rowHtml += `<td>${iter === 0 ? '-' : error.toFixed(4)}</td>`;
         tbody.innerHTML += `<tr>${rowHtml}</tr>`;
         
         // Gráfica
@@ -164,7 +164,8 @@ function calcularGaussSeidel() {
     let resLog = warningMsg;
     resLog += `Solución aproximada en ${iter} iteraciones:\n`;
     for(let i=0; i<n; i++) {
-        resLog += `x${i+1} = ${x[i].toFixed(6)}\n`;
+        // Formato final a 4 decimales
+        resLog += `x${i+1} = ${x[i].toFixed(4)}\n`;
     }
     resultDiv.textContent = resLog;
 
@@ -172,8 +173,11 @@ function calcularGaussSeidel() {
 }
 
 function borrarDatos() {
+    document.getElementById('tol').value = '0.001'; // Restaurar default
+    document.getElementById('maxIter').value = '100';
     crearMatrizInput(); 
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
+    document.getElementById('table-head-row').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
@@ -190,13 +194,22 @@ function generarGrafica(labels, data) {
             datasets: [{
                 label: 'Error (Norma)',
                 data: data,
-                borderColor: '#D64545', // Color Naranja para diferenciar de Jacobi
+                borderColor: '#D64545', // Color para diferenciar de Jacobi
                 backgroundColor: 'rgba(214, 69, 69, 0.1)',
                 fill: true,
+                borderWidth: 2,
+                pointRadius: 4,
                 tension: 0.2
             }]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { 
+                y: { beginAtZero: true, title: { display: true, text: 'Norma del Error' } },
+                x: { title: { display: true, text: 'Iteración' } }
+            } 
+        }
     });
 }
 
@@ -211,22 +224,35 @@ function exportarPDF() {
     doc.text("Reporte: Método de Gauss-Seidel", 14, 20);
     doc.setFontSize(12); doc.setTextColor(0);
     
+    // Imprimir Resultados Finales
     const finalRes = document.getElementById('paso-a-paso').textContent;
     const splitTitle = doc.splitTextToSize(finalRes, 180);
     doc.text(splitTitle, 14, 30);
 
-    doc.autoTable({ html: '#tabla-resultados', startY: 50, theme: 'grid', headStyles: { fillColor: [31, 58, 95] } });
+    // Ajuste dinámico de fuente para la tabla (por si es matriz muy grande)
+    let fontSizeTable = currentDim > 5 ? 7 : 9;
+
+    doc.autoTable({ 
+        html: '#tabla-resultados', 
+        startY: 60, 
+        theme: 'grid', 
+        headStyles: { fillColor: [31, 58, 95] },
+        styles: { fontSize: fontSizeTable, cellPadding: 2 }
+    });
 
     const canvas = document.getElementById('graficaError');
     if(canvas){
         const imgData = canvas.toDataURL('image/png');
-        let finalY = doc.lastAutoTable.finalY + 10;
-        if (finalY + 80 > doc.internal.pageSize.height) { doc.addPage(); finalY=20; }
+        let finalY = doc.lastAutoTable.finalY + 15;
+        const pageHeight = doc.internal.pageSize.height;
+        const imgHeight = 80;
+
+        if (finalY + imgHeight > pageHeight) { doc.addPage(); finalY=20; }
         
         doc.setFontSize(14);
         doc.setTextColor(31, 58, 95);
-        doc.text("Gráfica de Convergencia", 14, finalY);
-        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
+        doc.text("Gráfica de Convergencia del Error", 14, finalY);
+        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     doc.save("GaussSeidel_Reporte.pdf");
 }

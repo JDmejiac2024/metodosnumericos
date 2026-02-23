@@ -42,7 +42,7 @@ function crearMatrizInput() {
 // 2. Función Principal: Calcular Jacobi
 function calcularJacobi() {
     const n = currentDim;
-    const tol = parseFloat(document.getElementById('tol').value) || 0.001;
+    const tol = parseFloat(document.getElementById('tol').value) || 0.001; // Estandarizado a 0.001
     const maxIter = parseInt(document.getElementById('maxIter').value) || 100;
     
     const tbody = document.querySelector('#tabla-resultados tbody');
@@ -141,15 +141,15 @@ function calcularJacobi() {
         }
         error = Math.sqrt(sumDiffSq); // Norma simple
 
-        // Si es la primera iteración, el error es relativo al tamaño del vector
+        // Si es la primera iteración, el error se omite visualmente como 100
         if(iter === 0) error = 100; 
 
-        // Agregar fila a tabla
+        // Agregar fila a tabla con 4 decimales
         let rowHtml = `<td>${iter + 1}</td>`;
         for(let i=0; i<n; i++) {
-            rowHtml += `<td>${x_curr[i].toFixed(5)}</td>`;
+            rowHtml += `<td style="font-weight:bold; color:#2C3E50">${x_curr[i].toFixed(4)}</td>`;
         }
-        rowHtml += `<td>${error.toFixed(5)}</td>`;
+        rowHtml += `<td>${iter === 0 ? '-' : error.toFixed(4)}</td>`;
         tbody.innerHTML += `<tr>${rowHtml}</tr>`;
 
         // Actualizar datos para siguiente iter
@@ -172,7 +172,8 @@ function calcularJacobi() {
     let resLog = warningMsg;
     resLog += `Solución aproximada en ${iter} iteraciones:\n`;
     for(let i=0; i<n; i++) {
-        resLog += `x${i+1} = ${x_curr[i].toFixed(6)}\n`;
+        // Formato final a 4 decimales
+        resLog += `x${i+1} = ${x_curr[i].toFixed(4)}\n`;
     }
     resultDiv.textContent = resLog;
 
@@ -181,8 +182,11 @@ function calcularJacobi() {
 
 // 3. Borrar Datos
 function borrarDatos() {
+    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('maxIter').value = '100';
     crearMatrizInput(); // Reinicia la matriz inputs
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
+    document.getElementById('table-head-row').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
@@ -200,13 +204,22 @@ function generarGrafica(labels, data) {
             datasets: [{
                 label: 'Error (Norma)',
                 data: data,
-                borderColor: '#D64545', // Azul ingeniería
+                borderColor: '#D64545', // Rojo estandarizado
                 backgroundColor: 'rgba(214, 69, 69, 0.1)',
                 fill: true,
+                borderWidth: 2,
+                pointRadius: 4,
                 tension: 0.2
             }]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { 
+                y: { beginAtZero: true, title: { display: true, text: 'Norma del Error' } },
+                x: { title: { display: true, text: 'Iteración' } }
+            } 
+        }
     });
 }
 
@@ -227,14 +240,29 @@ function exportarPDF() {
     const splitTitle = doc.splitTextToSize(finalRes, 180);
     doc.text(splitTitle, 14, 30);
 
-    doc.autoTable({ html: '#tabla-resultados', startY: 50, theme: 'grid', headStyles: { fillColor: [31, 58, 95] } });
+    // Tabla con ajuste de fuente dinámica si el sistema es muy grande (ej. 10x10)
+    let fontSizeTable = currentDim > 5 ? 7 : 9;
+
+    doc.autoTable({ 
+        html: '#tabla-resultados', 
+        startY: 60, 
+        theme: 'grid', 
+        headStyles: { fillColor: [31, 58, 95] },
+        styles: { fontSize: fontSizeTable, cellPadding: 2 }
+    });
 
     const canvas = document.getElementById('graficaError');
     if(canvas){
         const imgData = canvas.toDataURL('image/png');
-        let finalY = doc.lastAutoTable.finalY + 10;
-        if (finalY + 80 > doc.internal.pageSize.height) { doc.addPage(); finalY=20; }
-        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
+        let finalY = doc.lastAutoTable.finalY + 15;
+        const pageHeight = doc.internal.pageSize.height;
+        const imgHeight = 80;
+
+        if (finalY + imgHeight > pageHeight) { doc.addPage(); finalY=20; }
+        
+        doc.setFontSize(14); doc.setTextColor(31, 58, 95);
+        doc.text("Gráfica de Convergencia del Error", 14, finalY);
+        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     doc.save("Jacobi_Reporte.pdf");
 }

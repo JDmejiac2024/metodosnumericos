@@ -118,8 +118,12 @@ function calcularLU() {
         d[i] = (b[i] - sum) / L[i][i]; // L[i][i] siempre es 1 en Doolittle, pero lo dejamos por generalidad
     }
 
+    // Limpiar -0.0000 en el vector d
     pasosLog += "\n3. Vector intermedio d (L*d = b):\n";
-    pasosLog += "[" + d.map(val => val.toFixed(4)).join(", ") + "]\n";
+    pasosLog += "[" + d.map(val => {
+        let v = Math.abs(val) < 1e-10 ? 0 : val;
+        return v.toFixed(4);
+    }).join(", ") + "]\n";
 
     // 2. Resolver U * x = d (Sustitución hacia atrás)
     let x = new Array(n).fill(0);
@@ -139,11 +143,13 @@ function calcularLU() {
     pasoDiv.textContent = pasosLog;
     matrizActual = x; 
 
+    // --- FORMATEO ESTRICTO A 4 DECIMALES PARA LA RESPUESTA ---
     let htmlRes = '<ul style="list-style:none; padding:0;">';
     x.forEach((val, idx) => {
+        let valorFinal = Math.abs(val) < 1e-10 ? 0 : val;
         htmlRes += `<li style="margin-bottom:8px; display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:4px;">
             <span style="color:var(--text-secondary);">x<sub>${idx+1}</sub> = </span> 
-            <span style="color:var(--action-success); font-weight:bold;">${val.toFixed(6)}</span>
+            <span style="color:var(--action-success); font-weight:bold;">${valorFinal.toFixed(4)}</span>
         </li>`;
     });
     htmlRes += '</ul>';
@@ -181,12 +187,15 @@ function generarGrafica(vectorX) {
     });
 }
 
+// Auxiliar para imprimir matriz en texto (Formateada a 4 decimales)
 function imprimirMatrizSimple(M, n) {
     let txt = "";
     for(let i=0; i<n; i++) {
         txt += "| ";
         for(let j=0; j<n; j++) {
-            txt += M[i][j].toFixed(4).padStart(10, " ") + " ";
+            // Evitar -0.0000
+            let val = Math.abs(M[i][j]) < 1e-10 ? 0 : M[i][j];
+            txt += val.toFixed(4).padStart(10, " ") + " ";
         }
         txt += "|\n";
     }

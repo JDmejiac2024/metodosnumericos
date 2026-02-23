@@ -18,9 +18,9 @@ function generarInputsPuntos() {
 
     for (let i = 0; i < n; i++) {
         html += `<tr>
-                    <td style="font-weight:bold;">${i}</td>
-                    <td><input type="number" id="x_${i}" class="matrix-input" placeholder="x${i}" style="width: 100%;"></td>
-                    <td><input type="number" id="y_${i}" class="matrix-input" placeholder="y${i}" style="width: 100%;"></td>
+                    <td style="font-weight:bold; text-align:center;">${i}</td>
+                    <td><input type="number" id="x_${i}" class="matrix-input" placeholder="x${i}" style="width: 100%; text-align:center;"></td>
+                    <td><input type="number" id="y_${i}" class="matrix-input" placeholder="y${i}" style="width: 100%; text-align:center;"></td>
                  </tr>`;
     }
     html += '</tbody></table>';
@@ -78,7 +78,15 @@ function calcularLagrange() {
         
         for (let j = 0; j < n; j++) {
             if (i !== j) {
-                numeradorStr += `(x - ${x[j]})`;
+                // Formateo matemático para (x - xj)
+                let xj = x[j];
+                if (xj === 0) {
+                    numeradorStr += `(x)`;
+                } else {
+                    let sign = xj < 0 ? "+" : "-";
+                    numeradorStr += `(x ${sign} ${Math.abs(xj)})`;
+                }
+
                 denominadorVal *= (x[i] - x[j]);
                 
                 if (evaluar) {
@@ -87,18 +95,25 @@ function calcularLagrange() {
             }
         }
         
-        pasosLog += `   Numerador: ${numeradorStr}\n`;
-        pasosLog += `   Denominador: ${denominadorVal.toFixed(4)}\n`;
+        // Limpiar -0.0000
+        let denClean = Math.abs(denominadorVal) < 1e-10 ? 0 : denominadorVal;
+
+        pasosLog += `   Numerador:   ${numeradorStr}\n`;
+        pasosLog += `   Denominador: ${denClean.toFixed(4)}\n`;
         
         // Construimos el string visual
         let signo = y[i] >= 0 ? (i===0 ? "" : " + ") : " - ";
-        polinomioStr += `${signo}${Math.abs(y[i])}*[${numeradorStr}/${denominadorVal.toFixed(2)}] `;
+        polinomioStr += `${signo}${Math.abs(y[i]).toFixed(4)} * [ ${numeradorStr} / ${denClean.toFixed(4)} ]`;
 
         if (evaluar) {
             let aporte = y[i] * terminoVal;
             resultadoFinal += aporte;
-            pasosLog += `   Evaluación: L_${i}(${valX}) = ${terminoVal.toFixed(5)}\n`;
-            pasosLog += `   Aporte: ${y[i]} * ${terminoVal.toFixed(5)} = ${aporte.toFixed(5)}\n\n`;
+            
+            let termClean = Math.abs(terminoVal) < 1e-10 ? 0 : terminoVal;
+            let aporteClean = Math.abs(aporte) < 1e-10 ? 0 : aporte;
+            
+            pasosLog += `   Evaluación:  L_${i}(${valX}) = ${termClean.toFixed(4)}\n`;
+            pasosLog += `   Aporte:      ${y[i]} * ${termClean.toFixed(4)} = ${aporteClean.toFixed(4)}\n\n`;
         } else {
             pasosLog += "\n";
         }
@@ -108,8 +123,9 @@ function calcularLagrange() {
     divPolinomio.textContent = "P(x) = " + polinomioStr;
 
     if (evaluar) {
-        divEvaluacion.innerHTML = `Resultado: f(${valX}) ≈ ${resultadoFinal.toFixed(6)}`;
-        pasosLog += `--- RESULTADO FINAL ---\nP(${valX}) = ${resultadoFinal.toFixed(6)}`;
+        let resClean = Math.abs(resultadoFinal) < 1e-10 ? 0 : resultadoFinal;
+        divEvaluacion.innerHTML = `Evaluación: f(${valX}) ≈ ${resClean.toFixed(4)}`;
+        pasosLog += `--- RESULTADO FINAL ---\nP(${valX}) ≈ ${resClean.toFixed(4)}`;
     }
 
     divPasos.textContent = pasosLog;
@@ -198,7 +214,7 @@ function borrarDatos() {
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
 }
 
-// --- FUNCIÓN PDF ACTUALIZADA (SOLO RESULTADOS Y GRÁFICA) ---
+// --- FUNCIÓN PDF ---
 function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();

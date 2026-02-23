@@ -3,13 +3,26 @@
 
 let chartInstance = null;
 
+// Función auxiliar para formatear números reales y complejos a 4 decimales
+function formatoComplejo(c) {
+    if (typeof c === 'number') {
+        let val = Math.abs(c) < 1e-10 ? 0 : c;
+        return val.toFixed(4);
+    }
+    let re = Math.abs(c.re) < 1e-10 ? 0 : c.re;
+    let im = Math.abs(c.im) < 1e-10 ? 0 : c.im;
+    if (im === 0) return re.toFixed(4);
+    let sign = im < 0 ? '-' : '+';
+    return `${re.toFixed(4)} ${sign} ${Math.abs(im).toFixed(4)}i`;
+}
+
 function calcularMuller() {
     // 1. Obtener Inputs
     const funcStr = document.getElementById('func').value;
     const x0Val = parseFloat(document.getElementById('x0').value);
     const x1Val = parseFloat(document.getElementById('x1').value);
     const x2Val = parseFloat(document.getElementById('x2').value);
-    const tol = parseFloat(document.getElementById('tol').value) || 0.001;
+    const tol = parseFloat(document.getElementById('tol').value) || 0.001; // Actualizado a 0.001
     const maxIter = parseInt(document.getElementById('maxIter').value) || 100;
 
     const tbody = document.querySelector('#tabla-resultados tbody');
@@ -34,7 +47,7 @@ function calcularMuller() {
             try {
                 return math.evaluate(funcStr, { x: x });
             } catch (e) {
-                return NaN;
+                return math.complex(0, 0); // Evitar cuelgues si falla temporalmente
             }
         };
 
@@ -45,13 +58,9 @@ function calcularMuller() {
 
         let iter = 0;
         let error = 100;
-        let x3 = 0;
-        let pasosLog = "";
+        let x3 = math.complex(0, 0);
+        let pasosLog = "--- INICIO MÉTODO DE MÜLLER ---\n\n";
         
-        // Arrays para gráfica (solo parte real si el resultado es real)
-        let graphX = [];
-        let graphY = [];
-
         // --- BUCLE MÜLLER ---
         while (error > tol && iter < maxIter) {
             
@@ -84,33 +93,34 @@ function calcularMuller() {
             // Nuevo punto x3
             x3 = math.add(x2, dx);
 
-            // Calcular error
+            // Calcular error (relativo a x3)
             if (iter > 0 || math.abs(x3) > 1e-10) { 
                  error = math.abs(math.divide(dx, x3)) * 100;
             } else {
                  error = 100;
             }
+            if (iter === 0) error = 100;
 
-            // Formatear para tabla (mostrar complejo si es necesario)
-            let x3Str = math.format(x3, {notation: 'fixed', precision: 5});
-            let fx3Str = math.format(f(x3), {notation: 'exponential', precision: 3});
+            // Formatear resultados a 4 decimales
+            let x3Str = formatoComplejo(x3);
+            let fx3Str = formatoComplejo(f(x3));
 
             // Llenar tabla
             let fila = `
                 <tr>
                     <td>${iter + 1}</td>
-                    <td style="font-family: monospace;">${x3Str}</td>
+                    <td style="font-family: monospace; font-weight:bold; color:var(--primary-dark);">${x3Str}</td>
                     <td style="font-family: monospace;">${fx3Str}</td>
-                    <td>${error.toFixed(4)}%</td>
+                    <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
 
-            // Log de pasos
+            // Log de pasos con 4 decimales
             pasosLog += `Iteración ${iter + 1}:\n`;
-            pasosLog += `  x0=${math.format(x0,4)}, x1=${math.format(x1,4)}, x2=${math.format(x2,4)}\n`;
+            pasosLog += `  x0 = ${formatoComplejo(x0)}\n  x1 = ${formatoComplejo(x1)}\n  x2 = ${formatoComplejo(x2)}\n`;
             pasosLog += `  Calculado x3 = ${x3Str}\n`;
-            pasosLog += `  Error = ${error.toFixed(4)}%\n\n`;
+            pasosLog += `  Error = ${iter === 0 ? '-' : error.toFixed(4) + '%'}\n\n`;
 
             // Actualizar puntos (desplazamiento)
             x0 = x1;
@@ -120,24 +130,25 @@ function calcularMuller() {
             iter++;
         }
 
-        pasosLog += `\n--- RESULTADO FINAL ---\nRaíz aproximada: ${math.format(x3, 5)}`;
+        pasosLog += `--- RESULTADO FINAL ---\nRaíz aproximada: ${formatoComplejo(x3)}`;
         pasoDiv.textContent = pasosLog;
-        rootResult.textContent = `Raíz: ${math.format(x3, 4)}`;
+        rootResult.textContent = `Raíz: ${formatoComplejo(x3)}`;
 
         // Graficar (Solo si la raíz final tiene parte imaginaria pequeña o nula)
         if (Math.abs(x3.im) < 1e-5) {
             generarGraficaReal(funcStr, x3.re);
         } else {
-            msgError.textContent = "Nota: La raíz es compleja. La gráfica mostrará solo la función en el eje real.";
+            msgError.textContent = "Nota: La raíz es compleja. La gráfica mostrará la función solo en el eje real cerca de x2.";
             generarGraficaReal(funcStr, x2Val); 
         }
 
     } catch (e) {
-        msgError.textContent = "Error matemático: " + e.message;
+        msgError.textContent = "Error matemático: Revisa la sintaxis de la función.";
         console.error(e);
     }
 }
 
+// Función para graficar (invariable)
 function generarGraficaReal(funcStr, centerVal) {
     const ctx = document.getElementById('graficaError').getContext('2d');
     if (chartInstance) chartInstance.destroy();
@@ -173,7 +184,7 @@ function generarGraficaReal(funcStr, centerVal) {
             datasets: [{
                 label: 'f(x)',
                 data: dataY,
-                borderColor: '#2F6DB3',
+                borderColor: '#2F6DB3', // Azul Ingeniería
                 borderWidth: 2,
                 pointRadius: 0,
                 fill: false,
@@ -190,7 +201,11 @@ function generarGraficaReal(funcStr, centerVal) {
         },
         options: {
             responsive: true,
-            scales: { x: { display: true }, y: { beginAtZero: false } }
+            maintainAspectRatio: false,
+            scales: { 
+                x: { display: true }, 
+                y: { beginAtZero: false } 
+            }
         }
     });
 }
@@ -200,9 +215,12 @@ function borrarDatos() {
     document.getElementById('x0').value = '';
     document.getElementById('x1').value = '';
     document.getElementById('x2').value = '';
+    document.getElementById('tol').value = '0.001';
+    document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('root-result').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
+    document.getElementById('error-msg').textContent = '';
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
 }
 
@@ -215,16 +233,17 @@ function exportarPDF() {
     doc.setFontSize(18); doc.setTextColor(31, 58, 95);
     doc.text("Reporte: Método de Müller", 14, 20);
     
-    doc.setFontSize(10); doc.setTextColor(0);
+    doc.setFontSize(11); doc.setTextColor(0);
     doc.text("Función: " + document.getElementById('func').value, 14, 30);
-    doc.text("Raíz: " + document.getElementById('root-result').textContent, 14, 36);
+    doc.text("Raíz Aprox: " + document.getElementById('root-result').textContent, 14, 36);
     
     // Generar Tabla
     doc.autoTable({ 
         html: '#tabla-resultados', 
         startY: 45,
         theme: 'grid',
-        headStyles: { fillColor: [31, 58, 95] }
+        headStyles: { fillColor: [31, 58, 95] },
+        styles: { fontSize: 9, cellPadding: 2 }
     });
 
     // Agregar Gráfica con Título

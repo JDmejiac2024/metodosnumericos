@@ -29,7 +29,7 @@ function calcularSteffensen() {
     }
 
     let xi = parseFloat(x0Input);
-    const tol = parseFloat(tolInput) || 0.001;
+    const tol = parseFloat(tolInput) || 0.001; // Actualizado a 0.001
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {
@@ -52,7 +52,15 @@ function calcularSteffensen() {
             if (Math.abs(f_xi) < 1e-12) {
                 pasosLog += `\n¡Raíz exacta encontrada!\n`;
                 error = 0;
-                tbody.innerHTML += `<tr><td>${iter + 1}</td><td>${xi.toFixed(6)}</td><td>0.000</td><td>0%</td></tr>`;
+                tbody.innerHTML += `<tr>
+                    <td>${iter + 1}</td>
+                    <td>${xi.toFixed(4)}</td>
+                    <td>0.0000</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td style="font-weight:bold; color:#2C3E50">${xi.toFixed(4)}</td>
+                    <td>0.0000%</td>
+                </tr>`;
                 break;
             }
 
@@ -85,22 +93,25 @@ function calcularSteffensen() {
             }
             if (iter === 0) error = 100;
 
-            // Tabla
+            // Tabla (7 columnas con 4 decimales)
             const fila = `
                 <tr>
                     <td>${iter + 1}</td>
-                    <td>${xi.toFixed(6)}</td>
-                    <td>${f_xi.toExponential(3)}</td>
+                    <td>${xi.toFixed(4)}</td>
+                    <td>${f_xi.toFixed(4)}</td>
+                    <td>${val_aux.toFixed(4)}</td>
+                    <td>${f_val_aux.toFixed(4)}</td>
+                    <td style="font-weight:bold; color:#2C3E50">${xi_new.toFixed(4)}</td>
                     <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
 
-            // Log Detallado
+            // Log Detallado (4 decimales)
             pasosLog += `Iteración ${iter + 1}:\n`;
-            pasosLog += `  x_i = ${xi.toFixed(6)}, f(x_i) = ${f_xi.toExponential(3)}\n`;
-            pasosLog += `  f(x_i + f(x_i)) = ${f_val_aux.toExponential(3)}\n`;
-            pasosLog += `  x_{i+1} = ${xi_new.toFixed(6)}\n`;
+            pasosLog += `  x_i = ${xi.toFixed(4)}, f(x_i) = ${f_xi.toFixed(4)}\n`;
+            pasosLog += `  x_i + f(x_i) = ${val_aux.toFixed(4)}, f(...) = ${f_val_aux.toFixed(4)}\n`;
+            pasosLog += `  x_{i+1} = ${xi_new.toFixed(4)}\n`;
             pasosLog += `  Error = ${iter === 0 ? '-' : error.toFixed(4) + '%'}\n\n`;
 
             xi = xi_new;
@@ -110,9 +121,9 @@ function calcularSteffensen() {
             iter++;
         }
 
-        pasosLog += `\n--- FIN DEL PROCESO ---\nRaíz aproximada: ${xi.toFixed(6)}`;
+        pasosLog += `\n--- FIN DEL PROCESO ---\nRaíz aproximada: ${xi.toFixed(4)}`;
         pasoDiv.textContent = pasosLog;
-        rootResult.textContent = `Raíz: ${xi.toFixed(6)}`;
+        rootResult.textContent = `Raíz aprox: ${xi.toFixed(4)}`;
         
         generarGrafica(labels, dataError);
 
@@ -125,6 +136,8 @@ function calcularSteffensen() {
 function borrarDatos() {
     document.getElementById('func').value = '';
     document.getElementById('x0').value = '';
+    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
@@ -146,10 +159,19 @@ function generarGrafica(labels, data) {
                 borderColor: '#D64545', // Azul
                 backgroundColor: 'rgba(47, 109, 179, 0.1)',
                 fill: true,
+                borderWidth: 2,
+                pointRadius: 4,
                 tension: 0.2
             }]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { 
+                y: { beginAtZero: true, title: { display: true, text: 'Porcentaje de Error' } },
+                x: { title: { display: true, text: 'Iteración' } }
+            } 
+        }
     });
 }
 
@@ -167,17 +189,27 @@ function exportarPDF() {
     doc.text(`Función: ${document.getElementById('func').value}`, 14, 30);
     doc.text(`Raíz Aprox: ${document.getElementById('root-result').textContent}`, 14, 38);
 
-    doc.autoTable({ html: '#tabla-resultados', startY: 45, theme: 'grid', headStyles: { fillColor: [31, 58, 95] } });
+    // Ajuste de tamaño de fuente a 9 para 7 columnas
+    doc.autoTable({ 
+        html: '#tabla-resultados', 
+        startY: 45, 
+        theme: 'grid', 
+        headStyles: { fillColor: [31, 58, 95] },
+        styles: { fontSize: 9, cellPadding: 2 } 
+    });
 
     const canvas = document.getElementById('graficaError');
     if(canvas){
         const imgData = canvas.toDataURL('image/png');
         let finalY = doc.lastAutoTable.finalY + 15;
-        if (finalY + 90 > doc.internal.pageSize.height) { doc.addPage(); finalY=20; }
+        const pageHeight = doc.internal.pageSize.height;
+        const imgHeight = 80;
+
+        if (finalY + imgHeight > pageHeight) { doc.addPage(); finalY=20; }
         
         doc.setFontSize(14); doc.setTextColor(31, 58, 95);
         doc.text("Gráfica de Convergencia", 14, finalY);
-        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
+        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     doc.save("Steffensen_Reporte.pdf");
 }

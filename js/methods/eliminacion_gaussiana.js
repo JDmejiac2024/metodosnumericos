@@ -123,11 +123,14 @@ function calcularGauss() {
     pasoDiv.textContent = pasosLog;
     matrizActual = A;
 
+    // --- FORMATEO ESTRICTO A 4 DECIMALES PARA LA RESPUESTA ---
     let htmlRes = '<ul style="list-style:none; padding:0;">';
     X.forEach((val, idx) => {
+        // Evitar el -0.0000 visualmente
+        let valorFinal = Math.abs(val) < 1e-10 ? 0 : val;
         htmlRes += `<li style="margin-bottom:8px; display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:4px;">
             <span style="color:var(--text-secondary);">x<sub>${idx+1}</sub> = </span> 
-            <span style="color:var(--action-success); font-weight:bold;">${val.toFixed(6)}</span>
+            <span style="color:var(--action-success); font-weight:bold;">${valorFinal.toFixed(4)}</span>
         </li>`;
     });
     htmlRes += '</ul>';
@@ -172,13 +175,15 @@ function generarGrafica(vectorX) {
     });
 }
 
-// Auxiliar para imprimir matriz en texto
+// Auxiliar para imprimir matriz en texto (Formateada a 4 decimales)
 function imprimirMatriz(M, n) {
     let txt = "";
     for(let i=0; i<n; i++) {
         txt += "| ";
         for(let j=0; j<n+1; j++) {
-            txt += M[i][j].toFixed(4).padStart(10, " ") + " ";
+            // Evitar -0.0000 en la matriz impresa
+            let val = Math.abs(M[i][j]) < 1e-10 ? 0 : M[i][j];
+            txt += val.toFixed(4).padStart(10, " ") + " ";
             if(j === n-1) txt += "| ";
         }
         txt += "|\n";

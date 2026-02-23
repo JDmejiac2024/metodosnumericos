@@ -1,6 +1,6 @@
 // js/methods/biseccion.js
 
-// 1. Variable global para la gráfica (necesaria para poder borrarla/actualizarla)
+// 1. Variable global para la gráfica
 let chartInstance = null;
 
 // ==========================================
@@ -35,7 +35,7 @@ function calcularBiseccion() {
     // Convertir a números
     let xi = parseFloat(xiInput);
     let xu = parseFloat(xuInput);
-    const tol = parseFloat(tolInput) || 0.001; // Valor por defecto
+    const tol = parseFloat(tolInput) || 0.001; // Valor por defecto actualizado a 0.001
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {
@@ -65,6 +65,11 @@ function calcularBiseccion() {
             // Fórmula de Bisección
             xr = (xi + xu) / 2;
 
+            // Evaluaciones de la función
+            let fa = f(xi);
+            let fb = f(xu);
+            let fxr = f(xr);
+
             // Cálculo del Error Relativo
             if (iter > 0) {
                 error = Math.abs((xr - xrAnt) / xr) * 100;
@@ -72,31 +77,33 @@ function calcularBiseccion() {
                 error = 100; // 100% en la primera iteración
             }
 
-            // 1. Agregar fila a la tabla HTML
+            // 1. Agregar fila a la tabla HTML (AHORA CON 4 DECIMALES MAX)
             const fila = `
                 <tr>
                     <td>${iter + 1}</td>
-                    <td>${xi.toFixed(5)}</td>
-                    <td>${xu.toFixed(5)}</td>
-                    <td style="font-weight:bold; color:#2C3E50">${xr.toFixed(5)}</td>
-                    <td>${f(xr).toExponential(3)}</td>
+                    <td>${xi.toFixed(4)}</td>
+                    <td>${xu.toFixed(4)}</td>
+                    <td>${fa.toFixed(4)}</td>
+                    <td>${fb.toFixed(4)}</td>
+                    <td style="font-weight:bold; color:#2C3E50">${xr.toFixed(4)}</td>
+                    <td>${fxr.toFixed(4)}</td>
                     <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
 
-            // 2. Registrar explicación en el Paso a Paso
+            // 2. Registrar explicación en el Paso a Paso (4 decimales)
             pasosLog += `Iteración ${iter + 1}:\n`;
-            pasosLog += `  Intervalo: [${xi.toFixed(5)}, ${xu.toFixed(5)}]\n`;
-            pasosLog += `  Raíz (xr): ${xr.toFixed(5)}\n`;
+            pasosLog += `  Intervalo: [${xi.toFixed(4)}, ${xu.toFixed(4)}]\n`;
+            pasosLog += `  Raíz (xr): ${xr.toFixed(4)}\n`;
             
             // 3. Lógica de cambio de límites
-            if (f(xi) * f(xr) < 0) {
+            if (fa * fxr < 0) {
                 xu = xr;
-                pasosLog += `  Signo cambia a la izquierda. Nuevo intervalo: [${xi.toFixed(5)}, ${xr.toFixed(5)}]\n\n`;
+                pasosLog += `  Signo cambia a la izquierda. Nuevo intervalo: [${xi.toFixed(4)}, ${xr.toFixed(4)}]\n\n`;
             } else {
                 xi = xr;
-                pasosLog += `  Signo cambia a la derecha. Nuevo intervalo: [${xr.toFixed(5)}, ${xu.toFixed(5)}]\n\n`;
+                pasosLog += `  Signo cambia a la derecha. Nuevo intervalo: [${xr.toFixed(4)}, ${xu.toFixed(4)}]\n\n`;
             }
 
             // 4. Guardar datos para la gráfica
@@ -107,9 +114,9 @@ function calcularBiseccion() {
         }
         // --- FIN DEL ALGORITMO ---
 
-        // Mostrar resultados finales
+        // Mostrar resultados finales con 4 decimales
         pasoDiv.textContent = pasosLog;
-        rootResult.textContent = `Raíz aprox: ${xr.toFixed(5)}`;
+        rootResult.textContent = `Raíz aprox: ${xr.toFixed(4)}`;
         
         // Generar la gráfica
         generarGrafica(labels, dataError);
@@ -128,7 +135,7 @@ function borrarDatos() {
     document.getElementById('func').value = '';
     document.getElementById('xi').value = '';
     document.getElementById('xu').value = '';
-    document.getElementById('tol').value = '0.0001'; 
+    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
     document.getElementById('maxIter').value = '100'; 
     
     // 2. Limpiar Resultados visuales
@@ -211,13 +218,13 @@ function exportarPDF() {
     doc.text(`Intervalo Final: [${document.getElementById('xi').value}, ${document.getElementById('xu').value}]`, 14, 36);
     doc.text(`Raíz Aprox: ${document.getElementById('root-result').textContent}`, 14, 42);
 
-    // 3. Generar Tabla
+    // 3. Generar Tabla con fuente más pequeña para acomodar las nuevas columnas
     doc.autoTable({
         html: '#tabla-resultados',
         startY: 50,
         theme: 'grid',
         headStyles: { fillColor: [44, 62, 80] },
-        styles: { fontSize: 10, cellPadding: 2 }
+        styles: { fontSize: 9, cellPadding: 2 } // Ajuste de tamaño de fuente
     });
 
     // 4. Capturar e insertar Gráfica

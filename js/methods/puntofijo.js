@@ -30,7 +30,7 @@ function calcularPuntoFijo() {
     }
 
     let xi = parseFloat(x0Input);
-    const tol = parseFloat(tolInput) || 0.001;
+    const tol = parseFloat(tolInput) || 0.001; // Actualizado a 0.001
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {
@@ -57,7 +57,7 @@ function calcularPuntoFijo() {
             // Validar divergencia extrema
             if (Math.abs(xi_new) > 1e12 || isNaN(xi_new)) {
                 msgError.textContent = "Error: El método diverge (el valor tiende a infinito o no existe). Intenta con otro despeje g(x).";
-                pasosLog += `\nCRITICAL: Divergencia detectada en iteración ${iter+1}. Valor demasiado grande.`;
+                pasosLog += `\nCRITICAL: Divergencia detectada en iteración ${iter+1}. Valor demasiado grande o indefinido.`;
                 pasoDiv.textContent = pasosLog;
                 return;
             }
@@ -72,21 +72,23 @@ function calcularPuntoFijo() {
             }
             if (iter === 0) error = 100;
 
-            // Llenar Tabla
+            // Llenar Tabla (Con 4 decimales estandarizados y columna x_{i+1})
             const fila = `
                 <tr>
                     <td>${iter + 1}</td>
-                    <td>${xi.toFixed(5)}</td>
-                    <td>${xi_new.toFixed(5)}</td>
+                    <td>${xi.toFixed(4)}</td>
+                    <td>${xi_new.toFixed(4)}</td>
+                    <td style="font-weight:bold; color:#2C3E50">${xi_new.toFixed(4)}</td>
                     <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
 
-            // Paso a Paso Log
+            // Paso a Paso Log (Con 4 decimales)
             pasosLog += `Iteración ${iter + 1}:\n`;
-            pasosLog += `  x_i = ${xi.toFixed(5)}\n`;
-            pasosLog += `  g(x_i) = ${xi_new.toFixed(5)}\n`;
+            pasosLog += `  x_i = ${xi.toFixed(4)}\n`;
+            pasosLog += `  g(x_i) = ${xi_new.toFixed(4)}\n`;
+            pasosLog += `  x_{i+1} = ${xi_new.toFixed(4)}\n`;
             pasosLog += `  Error = ${iter === 0 ? '-' : error.toFixed(4) + '%'}\n\n`;
 
             // Actualizar
@@ -99,11 +101,11 @@ function calcularPuntoFijo() {
         }
 
         pasoDiv.textContent = pasosLog;
-        rootResult.textContent = `Raíz aprox: ${xi.toFixed(5)}`;
+        rootResult.textContent = `Raíz aprox: ${xi.toFixed(4)}`; // 4 decimales
         
-        // Si hay f(x), mostramos cuánto vale f en la raíz encontrada
+        // Si hay f(x), mostramos cuánto vale f en la raíz encontrada con 4 decimales
         if (f) {
-            pasoDiv.textContent += `\nVerificación en f(x): f(${xi.toFixed(5)}) = ${f(xi).toExponential(3)}`;
+            pasoDiv.textContent += `\nVerificación en f(x):\n  f(${xi.toFixed(4)}) = ${f(xi).toFixed(4)}`;
         }
         
         generarGrafica(labels, dataError);
@@ -119,6 +121,8 @@ function borrarDatos() {
     document.getElementById('func').value = '';
     document.getElementById('gx').value = '';
     document.getElementById('x0').value = '';
+    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
@@ -137,13 +141,22 @@ function generarGrafica(labels, data) {
             datasets: [{
                 label: '% Error Relativo',
                 data: data,
-                borderColor: '#D64545', // Morado para Punto Fijo
+                borderColor: '#D64545', // Color para Punto Fijo
                 backgroundColor: 'rgba(214, 69, 69, 0.1)',
                 fill: true,
+                borderWidth: 2,
+                pointRadius: 4,
                 tension: 0.2
             }]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { 
+                y: { beginAtZero: true, title: { display: true, text: 'Porcentaje de Error' } },
+                x: { title: { display: true, text: 'Iteración' } }
+            } 
+        }
     });
 }
 
@@ -165,18 +178,27 @@ function exportarPDF() {
     doc.text(`Valor Inicial: ${document.getElementById('x0').value}`, 14, 42);
     doc.text(`Raíz: ${document.getElementById('root-result').textContent}`, 14, 48);
 
-    doc.autoTable({ html: '#tabla-resultados', startY: 55, theme: 'grid', headStyles: { fillColor: [31, 58, 95] } });
+    doc.autoTable({ 
+        html: '#tabla-resultados', 
+        startY: 55, 
+        theme: 'grid', 
+        headStyles: { fillColor: [31, 58, 95] },
+        styles: { fontSize: 10, cellPadding: 2 }
+    });
 
     const canvas = document.getElementById('graficaError');
     if(canvas){
         const imgData = canvas.toDataURL('image/png');
         let finalY = doc.lastAutoTable.finalY + 10;
-        if (finalY + 80 > doc.internal.pageSize.height) { doc.addPage(); finalY=20; }
+        const pageHeight = doc.internal.pageSize.height;
+        const imgHeight = 80;
+        
+        if (finalY + imgHeight > pageHeight) { doc.addPage(); finalY=20; }
         
         doc.setFontSize(14);
         doc.setTextColor(31, 58, 95);
         doc.text("Gráfica de Convergencia", 14, finalY);
-        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
+        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     doc.save("PuntoFijo_Reporte.pdf");
 }

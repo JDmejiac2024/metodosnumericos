@@ -18,9 +18,9 @@ function generarInputsPuntos() {
 
     for (let i = 0; i < n; i++) {
         html += `<tr>
-                    <td style="font-weight:bold;">${i}</td>
-                    <td><input type="number" id="x_${i}" class="matrix-input" placeholder="x${i}" style="width: 100%;"></td>
-                    <td><input type="number" id="y_${i}" class="matrix-input" placeholder="y${i}" style="width: 100%;"></td>
+                    <td style="font-weight:bold; text-align:center;">${i}</td>
+                    <td><input type="number" id="x_${i}" class="matrix-input" placeholder="x${i}" style="width: 100%; text-align:center;"></td>
+                    <td><input type="number" id="y_${i}" class="matrix-input" placeholder="y${i}" style="width: 100%; text-align:center;"></td>
                  </tr>`;
     }
     html += '</tbody></table>';
@@ -87,8 +87,11 @@ function calcularInterpolacion() {
             // Cálculo
             F[i][j] = (valSup - valInf) / (xSup - xInf);
             
-            // Log del paso
-            pasosLog += `   f[x${i},...,x${i+j}] = (${valSup.toFixed(4)} - ${valInf.toFixed(4)}) / (${xSup} - ${xInf}) = ${F[i][j].toFixed(5)}\n`;
+            // Limpieza de -0.0000
+            let v = Math.abs(F[i][j]) < 1e-10 ? 0 : F[i][j];
+            F[i][j] = v;
+
+            pasosLog += `   f[x${i},...,x${i+j}] = (${valSup.toFixed(4)} - ${valInf.toFixed(4)}) / (${xSup} - ${xInf}) = ${F[i][j].toFixed(4)}\n`;
         }
         pasosLog += "\n";
     }
@@ -98,30 +101,41 @@ function calcularInterpolacion() {
     pasosLog += "--- COEFICIENTES DEL POLINOMIO (b) ---\n";
     for (let j = 0; j < n; j++) {
         b.push(F[0][j]);
-        pasosLog += `b${j} = ${F[0][j].toFixed(5)}\n`;
+        pasosLog += `b${j} = ${F[0][j].toFixed(4)}\n`;
     }
 
     // --- MOSTRAR RESULTADOS ---
     
-    // 1. Tabla
-    let heads = '<th>i</th><th>x</th><th>f(x)</th>';
+    // 1. Tabla Html
+    let heads = '<th>i</th><th>x_i</th><th>f(x_i)</th>';
     for (let j = 1; j < n; j++) heads += `<th>Orden ${j}</th>`;
     tableHead.innerHTML = heads;
 
     for (let i = 0; i < n; i++) {
-        let row = `<td>${i}</td><td>${x[i]}</td>`;
+        // x_i se deja original para claridad, los demás con 4 decimales
+        let row = `<td>${i}</td><td style="font-weight:bold; color:var(--primary-dark);">${x[i]}</td>`;
         for (let j = 0; j < n - i; j++) {
             row += `<td>${F[i][j].toFixed(4)}</td>`;
         }
         tableBody.innerHTML += `<tr>${row}</tr>`;
     }
 
-    // 2. Construir Polinomio String
+    // 2. Construir Polinomio String Mejorado Matemáticamente
     let poliStr = `P(x) = ${b[0].toFixed(4)}`;
     for (let i = 1; i < n; i++) {
-        let term = (b[i] >= 0 ? " + " : " - ") + Math.abs(b[i]).toFixed(4);
+        if (Math.abs(b[i]) < 1e-10) continue; // Si es cero, saltar término
+        
+        let term = (b[i] > 0 ? " + " : " - ") + Math.abs(b[i]).toFixed(4);
+        
         for (let k = 0; k < i; k++) {
-            term += `(x - ${x[k]})`;
+            let xk = x[k];
+            if (xk === 0) {
+                term += `(x)`;
+            } else {
+                // Si la x es negativa, mostramos (x + n), si es positiva (x - n)
+                let sign = xk < 0 ? "+" : "-";
+                term += `(x ${sign} ${Math.abs(xk)})`;
+            }
         }
         poliStr += term;
     }
@@ -131,8 +145,9 @@ function calcularInterpolacion() {
     // 3. Evaluación
     if (!isNaN(valX)) {
         let res = evaluarPolinomio(valX, x, b);
-        divEvaluacion.innerHTML = `Resultado: f(${valX}) ≈ ${res.toFixed(6)}`;
-        pasosLog += `\n\n--- EVALUACIÓN EN x = ${valX} ---\nResultado aproximado: ${res.toFixed(6)}`;
+        let resClean = Math.abs(res) < 1e-10 ? 0 : res;
+        divEvaluacion.innerHTML = `Evaluación: f(${valX}) ≈ ${resClean.toFixed(4)}`;
+        pasosLog += `\n\n--- EVALUACIÓN EN x = ${valX} ---\nResultado aproximado: ${resClean.toFixed(4)}`;
     }
 
     // Mostrar pasos en el HTML
@@ -142,7 +157,7 @@ function calcularInterpolacion() {
     generarGrafica(x, y, b);
 }
 
-// Función auxiliar Horner
+// Función auxiliar Horner para evaluar polinomio de Newton
 function evaluarPolinomio(val, xData, b) {
     let n = b.length;
     let suma = b[0];
@@ -185,7 +200,7 @@ function generarGrafica(xData, yData, b) {
                 {
                     label: 'Polinomio Interpolante',
                     data: curveY,
-                    borderColor: '#2FA36B',
+                    borderColor: '#2FA36B', // Verde
                     borderWidth: 2,
                     pointRadius: 0,
                     fill: false,
@@ -195,7 +210,7 @@ function generarGrafica(xData, yData, b) {
                     label: 'Puntos Dados',
                     data: originalPoints,
                     type: 'scatter',
-                    backgroundColor: '#D64545',
+                    backgroundColor: '#D64545', // Rojo
                     pointRadius: 6,
                     pointHoverRadius: 8
                 }
@@ -227,15 +242,25 @@ function exportarPDF() {
     const doc = new jsPDF();
     
     doc.setFontSize(18); doc.setTextColor(31, 58, 95);
-    doc.text("Interpolación: Newton (Diferencias)", 14, 20);
+    doc.text("Interpolación: Newton (Diferencias Divididas)", 14, 20);
     
     doc.setFontSize(10); doc.setTextColor(0);
     let poly = document.getElementById('resultado-polinomio').textContent;
-    let splitPoly = doc.splitTextToSize("Polinomio: " + poly, 180);
+    let splitPoly = doc.splitTextToSize(poly, 180);
     doc.text(splitPoly, 14, 30);
 
+    // Ajuste del tamaño de fuente en base a la cantidad de puntos
+    let n = parseInt(document.getElementById('cantidadPuntos').value);
+    let tableFont = n > 5 ? 8 : 10;
+
     // Tabla de diferencias
-    doc.autoTable({ html: '#tabla-diferencias', startY: 50, theme: 'grid', headStyles: { fillColor: [31, 58, 95] } });
+    doc.autoTable({ 
+        html: '#tabla-diferencias', 
+        startY: 45, 
+        theme: 'grid', 
+        headStyles: { fillColor: [31, 58, 95] },
+        styles: { fontSize: tableFont, cellPadding: 2 } 
+    });
 
     // Sección de Gráfica con Título
     const canvas = document.getElementById('graficaInterpolacion');
@@ -251,13 +276,11 @@ function exportarPDF() {
             finalY = 20; 
         }
         
-        // --- AQUÍ ESTÁ EL TÍTULO QUE PEDISTE ---
         doc.setFontSize(14);
-        doc.setTextColor(31, 58, 95); // Mismo azul del header
+        doc.setTextColor(31, 58, 95);
         doc.text("Gráfica del Polinomio", 14, finalY);
 
-        // Insertar imagen debajo del título
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
     }
-    doc.save("Interpolacion_Newton.pdf");
-}// JavaScript Document
+    doc.save("Interpolacion_Newton_Reporte.pdf");
+}

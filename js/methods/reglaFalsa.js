@@ -30,7 +30,7 @@ function calcularReglaFalsa() {
 
     let xi = parseFloat(xiInput); // a
     let xu = parseFloat(xuInput); // b
-    const tol = parseFloat(tolInput) || 0.001;
+    const tol = parseFloat(tolInput) || 0.001; // Actualizado a 0.001
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {
@@ -54,9 +54,14 @@ function calcularReglaFalsa() {
         while (error > tol && iter < maxIter) {
             xrAnt = xr;
 
+            let fa = f(xi);
+            let fb = f(xu);
+
             // --- FÓRMULA DE REGLA FALSA ---
             // xr = xu - ( f(xu) * (xi - xu) ) / ( f(xi) - f(xu) )
-            xr = xu - (f(xu) * (xi - xu)) / (f(xi) - f(xu));
+            xr = xu - (fb * (xi - xu)) / (fa - fb);
+            
+            let fxr = f(xr);
 
             // Calcular Error
             if (iter > 0) {
@@ -65,32 +70,34 @@ function calcularReglaFalsa() {
                 error = 100;
             }
 
-            // Actualizar Tabla
+            // Actualizar Tabla (Con 4 decimales)
             const fila = `
                 <tr>
                     <td>${iter + 1}</td>
-                    <td>${xi.toFixed(5)}</td>
-                    <td>${xu.toFixed(5)}</td>
-                    <td style="font-weight:bold; color:#2C3E50">${xr.toFixed(5)}</td>
-                    <td>${f(xr).toExponential(3)}</td>
+                    <td>${xi.toFixed(4)}</td>
+                    <td>${xu.toFixed(4)}</td>
+                    <td>${fa.toFixed(4)}</td>
+                    <td>${fb.toFixed(4)}</td>
+                    <td style="font-weight:bold; color:#2C3E50">${xr.toFixed(4)}</td>
+                    <td>${fxr.toFixed(4)}</td>
                     <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
 
-            // Paso a Paso
+            // Paso a Paso (Con 4 decimales)
             pasosLog += `Iteración ${iter + 1}:\n`;
-            pasosLog += `  a=${xi.toFixed(5)}, b=${xu.toFixed(5)}\n`;
-            pasosLog += `  f(a)=${f(xi).toFixed(4)}, f(b)=${f(xu).toFixed(4)}\n`;
-            pasosLog += `  Aplicando fórmula Regla Falsa -> x_r = ${xr.toFixed(5)}\n`;
+            pasosLog += `  a=${xi.toFixed(4)}, b=${xu.toFixed(4)}\n`;
+            pasosLog += `  f(a)=${fa.toFixed(4)}, f(b)=${fb.toFixed(4)}\n`;
+            pasosLog += `  Aplicando fórmula Regla Falsa -> xr = ${xr.toFixed(4)}\n`;
             
             // Decisión de cambio de intervalo
-            if (f(xi) * f(xr) < 0) {
+            if (fa * fxr < 0) {
                 xu = xr;
-                pasosLog += `  f(a)*f(xr) < 0. La raíz está entre [a, xr]. Nuevo b = ${xr.toFixed(5)}\n\n`;
+                pasosLog += `  f(a)*f(xr) < 0. La raíz está entre [a, xr]. Nuevo b = ${xr.toFixed(4)}\n\n`;
             } else {
                 xi = xr;
-                pasosLog += `  f(a)*f(xr) > 0. La raíz está entre [xr, b]. Nuevo a = ${xr.toFixed(5)}\n\n`;
+                pasosLog += `  f(a)*f(xr) > 0. La raíz está entre [xr, b]. Nuevo a = ${xr.toFixed(4)}\n\n`;
             }
 
             labels.push(iter + 1);
@@ -99,7 +106,7 @@ function calcularReglaFalsa() {
         }
 
         pasoDiv.textContent = pasosLog;
-        rootResult.textContent = `Raíz aprox: ${xr.toFixed(5)}`;
+        rootResult.textContent = `Raíz aprox: ${xr.toFixed(4)}`;
         
         generarGrafica(labels, dataError);
 
@@ -113,6 +120,8 @@ function borrarDatos() {
     document.getElementById('func').value = '';
     document.getElementById('xi').value = '';
     document.getElementById('xu').value = '';
+    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
@@ -132,11 +141,20 @@ function generarGrafica(labels, data) {
                 data: data,
                 borderColor: '#D64545',
                 backgroundColor: 'rgba(214, 69, 69, 0.1)',
+                borderWidth: 2,
+                pointRadius: 4,
                 fill: true,
                 tension: 0.2
             }]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { 
+                y: { beginAtZero: true, title: { display: true, text: 'Porcentaje de Error' } },
+                x: { title: { display: true, text: 'Iteración' } }
+            } 
+        }
     });
 }
 
@@ -154,24 +172,33 @@ function exportarPDF() {
     doc.text(`Función: ${document.getElementById('func').value}`, 14, 30);
     doc.text(`Raíz: ${document.getElementById('root-result').textContent}`, 14, 38);
     
-    doc.autoTable({ html: '#tabla-resultados', startY: 45, theme: 'grid', headStyles: { fillColor: [44, 62, 80] } });
+    // Ajuste de tabla en PDF para las columnas extra
+    doc.autoTable({ 
+        html: '#tabla-resultados', 
+        startY: 45, 
+        theme: 'grid', 
+        headStyles: { fillColor: [44, 62, 80] },
+        styles: { fontSize: 9, cellPadding: 2 } 
+    });
     
     const canvas = document.getElementById('graficaError');
     if(canvas){
         const imgData = canvas.toDataURL('image/png');
         
         let finalY = doc.lastAutoTable.finalY + 10;
+        const pageHeight = doc.internal.pageSize.height;
+        const imgHeight = 80;
         
         // Verificar espacio
-        if (finalY + 80 > doc.internal.pageSize.height) { doc.addPage(); finalY=20; }
+        if (finalY + imgHeight > pageHeight) { doc.addPage(); finalY=20; }
         
         // --- AGREGAR TÍTULO DE LA GRÁFICA ---
         doc.setFontSize(14);
         doc.setTextColor(44, 62, 80);
         doc.text("Gráfica de Convergencia", 14, finalY);
         
-        // Insertar imagen un poco más abajo (+5)
-        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
+        // Insertar imagen
+        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     doc.save("ReglaFalsa_Reporte.pdf");
 }

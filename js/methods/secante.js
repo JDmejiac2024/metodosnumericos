@@ -31,7 +31,7 @@ function calcularSecante() {
 
     let x_prev = parseFloat(x0Input); // x_{i-1}
     let x_curr = parseFloat(x1Input); // x_i
-    const tol = parseFloat(tolInput) || 0.001;
+    const tol = parseFloat(tolInput) || 0.001; // Actualizado a 0.001
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {
@@ -59,7 +59,6 @@ function calcularSecante() {
             }
 
             // Fórmula Secante: x_{i+1} = x_i - ( f(x_i) * (x_{i-1} - x_i) ) / ( f(x_{i-1}) - f(x_i) )
-            // Nota: Es equivalente a x_curr - (f_curr * (x_prev - x_curr)) / (f_prev - f_curr)
             x_next = x_curr - (f_curr * (x_prev - x_curr)) / (f_prev - f_curr);
 
             // Calcular Error Relativo
@@ -69,24 +68,26 @@ function calcularSecante() {
                  error = Math.abs(x_next - x_curr) * 100;
             }
 
-            // Llenar Tabla
+            // Llenar Tabla (Con 4 decimales estandarizados y columnas extra)
             const fila = `
                 <tr>
                     <td>${iter + 1}</td>
-                    <td>${x_prev.toFixed(5)}</td>
-                    <td>${x_curr.toFixed(5)}</td>
-                    <td style="font-weight:bold; color:#2C3E50">${x_next.toFixed(5)}</td>
+                    <td>${x_prev.toFixed(4)}</td>
+                    <td>${x_curr.toFixed(4)}</td>
+                    <td>${f_prev.toFixed(4)}</td>
+                    <td>${f_curr.toFixed(4)}</td>
+                    <td style="font-weight:bold; color:#2C3E50">${x_next.toFixed(4)}</td>
                     <td>${error.toFixed(4)}%</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
 
-            // Paso a Paso
+            // Paso a Paso (Con 4 decimales)
             pasosLog += `Iteración ${iter + 1}:\n`;
-            pasosLog += `  x_{i-1} = ${x_prev.toFixed(5)}, f(x_{i-1}) = ${f_prev.toFixed(5)}\n`;
-            pasosLog += `  x_i     = ${x_curr.toFixed(5)}, f(x_i)     = ${f_curr.toFixed(5)}\n`;
-            pasosLog += `  x_{i+1} = ${x_curr.toFixed(5)} - [${f_curr.toFixed(4)} * (${x_prev.toFixed(4)} - ${x_curr.toFixed(4)})] / (${f_prev.toFixed(4)} - ${f_curr.toFixed(4)})\n`;
-            pasosLog += `  Nuevo x = ${x_next.toFixed(5)} | Error = ${error.toFixed(4)}%\n\n`;
+            pasosLog += `  x_{i-1} = ${x_prev.toFixed(4)}, f(x_{i-1}) = ${f_prev.toFixed(4)}\n`;
+            pasosLog += `  x_i     = ${x_curr.toFixed(4)}, f(x_i)     = ${f_curr.toFixed(4)}\n`;
+            pasosLog += `  x_{i+1} = ${x_curr.toFixed(4)} - [${f_curr.toFixed(4)} * (${x_prev.toFixed(4)} - ${x_curr.toFixed(4)})] / (${f_prev.toFixed(4)} - ${f_curr.toFixed(4)})\n`;
+            pasosLog += `  Nuevo x = ${x_next.toFixed(4)} | Error = ${error.toFixed(4)}%\n\n`;
 
             // Actualizar valores para la siguiente iteración
             x_prev = x_curr;
@@ -100,7 +101,7 @@ function calcularSecante() {
         }
 
         pasoDiv.textContent = pasosLog;
-        rootResult.textContent = `Raíz aprox: ${x_curr.toFixed(5)}`;
+        rootResult.textContent = `Raíz aprox: ${x_curr.toFixed(4)}`; // 4 decimales
         
         generarGrafica(labels, dataError);
 
@@ -115,6 +116,8 @@ function borrarDatos() {
     document.getElementById('func').value = '';
     document.getElementById('x0').value = '';
     document.getElementById('x1').value = '';
+    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
@@ -136,10 +139,19 @@ function generarGrafica(labels, data) {
                 borderColor: '#D64545', // Azul medio (Diferente a Newton para variedad)
                 backgroundColor: 'rgba(214, 69, 69, 0.1)',
                 fill: true,
+                borderWidth: 2,
+                pointRadius: 4,
                 tension: 0.2
             }]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { 
+                y: { beginAtZero: true, title: { display: true, text: 'Porcentaje de Error' } },
+                x: { title: { display: true, text: 'Iteración' } }
+            } 
+        }
     });
 }
 
@@ -158,18 +170,28 @@ function exportarPDF() {
     doc.text(`Valores Iniciales: x0=${document.getElementById('x0').value}, x1=${document.getElementById('x1').value}`, 14, 36);
     doc.text(`Raíz Encontrada: ${document.getElementById('root-result').textContent}`, 14, 42);
 
-    doc.autoTable({ html: '#tabla-resultados', startY: 50, theme: 'grid', headStyles: { fillColor: [31, 58, 95] } });
+    // Se redujo un poco el tamaño de la fuente para que quepan bien las 7 columnas
+    doc.autoTable({ 
+        html: '#tabla-resultados', 
+        startY: 50, 
+        theme: 'grid', 
+        headStyles: { fillColor: [31, 58, 95] },
+        styles: { fontSize: 9, cellPadding: 2 }
+    });
 
     const canvas = document.getElementById('graficaError');
     if(canvas){
         const imgData = canvas.toDataURL('image/png');
         let finalY = doc.lastAutoTable.finalY + 10;
-        if (finalY + 80 > doc.internal.pageSize.height) { doc.addPage(); finalY=20; }
+        const pageHeight = doc.internal.pageSize.height;
+        const imgHeight = 80;
+        
+        if (finalY + imgHeight > pageHeight) { doc.addPage(); finalY=20; }
         
         doc.setFontSize(14);
         doc.setTextColor(31, 58, 95);
         doc.text("Gráfica de Convergencia", 14, finalY);
-        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
+        doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     doc.save("Secante_Reporte.pdf");
 }
