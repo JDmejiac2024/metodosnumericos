@@ -37,13 +37,13 @@
         </div>
 
         <div class="nav-dropdown">
-            <button class="dropdown-btn">
+            <button class="dropdown-btn active">
                 <span><i class="fas fa-expand-arrows-alt"></i> Métodos Abiertos</span>
                 <i class="fas fa-chevron-down arrow"></i>
             </button>
-            <div class="dropdown-content">
+            <div class="dropdown-content show">
                 <a href="../abiertos/newton.html" class="sub-link">Newton-Raphson</a>
-                <a href="../abiertos/secante.html" class="sub-link">Secante</a>
+                <a href="../abiertos/secante.html" class="sub-link active">Secante</a>
                 <a href="../abiertos/puntofijo.html" class="sub-link">Punto Fijo</a>
                 <a href="../abiertos/raices_multiples.html" class="sub-link">Raíces Múltiples</a>
                 <a href="../abiertos/secante_modificado.html" class="sub-link">Secante Modificado</a>
@@ -104,11 +104,11 @@
                 </div>
                 
                 <div class="form-control">
-                    <label for="x0">Valor Inicial (x0):</label>
+                    <label for="x0">Valor Inicial (x_{i-1}):</label>
                     <input type="number" id="x0" step="any" value="2">
                 </div>
                 <div class="form-control">
-                    <label for="x1">Valor Inicial (x1):</label>
+                    <label for="x1">Valor Inicial (x_i):</label>
                     <input type="number" id="x1" step="any" value="3">
                 </div>
 
@@ -130,40 +130,42 @@
             <p id="error-msg"></p>
         </section>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
-            <section class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>Tabla de Iteraciones</h3>
-                    <span id="root-result" style="color: var(--primary-dark); font-weight: bold;"></span>
-                </div>
-                <div style="overflow-x: auto; max-height: 400px; margin-top: 10px;">
-                    <table id="tabla-resultados">
-                        <thead>
-                            <tr>
-                                <th>Iter</th>
-                                <th>x_{i-1}</th>
-                                <th>x_i</th>
-                                <th>x_{i+1} (Nuevo)</th>
-                                <th>Error %</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+        <section class="card" style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Tabla de Iteraciones</h3>
+                <span id="root-result" style="color: var(--primary-dark); font-weight: bold;"></span>
+            </div>
+            <div style="overflow-x: auto; max-height: 400px; margin-top: 10px;">
+                <table id="tabla-resultados">
+                    <thead>
+                        <tr>
+                            <th>Iter</th>
+                            <th>x_{i-1}</th>
+                            <th>x_i</th>
+                            <th>f(x_{i-1})</th>
+                            <th>f(x_i)</th>
+                            <th>x_{i+1}</th>
+                            <th>Error %</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px;">
+            <section class="card" style="margin-bottom: 0;">
+                <h3>Procedimiento Paso a Paso</h3>
+                <div id="paso-a-paso" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></div>
             </section>
 
-            <section class="card">
+            <section class="card" style="margin-bottom: 0;">
                 <h3>Gráfica de Convergencia</h3>
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="graficaError"></canvas>
                 </div>
             </section>
         </div>
-
-        <section class="card" style="margin-top: 20px;">
-            <h3>Procedimiento Paso a Paso</h3>
-            <div id="paso-a-paso" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></div>
-        </section>
 
     </main>
 

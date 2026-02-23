@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secante Modificado - Métodos Numéricos</title>
+    <title>Secante Modificada - Métodos Numéricos</title>
     
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -45,8 +45,8 @@
                     <a href="newton.html" class="sub-link">Newton-Raphson</a>
                     <a href="secante.html" class="sub-link">Secante</a>
                     <a href="puntofijo.html" class="sub-link">Punto Fijo</a>
-                    <a href="raices_multiples.html" class="sub-link active">Raíces Múltiples</a>
-                    <a href="secante_modificado.html" class="sub-link">Secante Modificado</a>
+                    <a href="raices_multiples.html" class="sub-link">Raíces Múltiples</a>
+                    <a href="secante_modificado.html" class="sub-link active">Secante Modificado</a>
                     <a href="steffensen.html" class="sub-link">Steffensen</a>
                 </div>
             </div>
@@ -90,7 +90,7 @@
 
     <main id="main-content">
         <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1>Método de la Secante Modificado</h1>
+            <h1>Método de la Secante Modificada</h1>
             <button onclick="exportarPDF()">📄 Guardar Reporte PDF</button>
         </header>
 
@@ -103,7 +103,7 @@
                 </div>
                 
                 <div class="form-control">
-                    <label for="x0">Valor Inicial (x0):</label>
+                    <label for="x0">Valor Inicial (x_0):</label>
                     <input type="number" id="x0" step="any" value="3.5">
                 </div>
 
@@ -133,39 +133,42 @@
             <p id="error-msg"></p>
         </section>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
-            <section class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>Tabla de Iteraciones</h3>
-                    <span id="root-result" style="color: var(--primary-dark); font-weight: bold;"></span>
-                </div>
-                <div style="overflow-x: auto; max-height: 400px; margin-top: 10px;">
-                    <table id="tabla-resultados">
-                        <thead>
-                            <tr>
-                                <th>Iter</th>
-                                <th>x_i</th>
-                                <th>f(x_i)</th>
-                                <th>Error %</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+        <section class="card" style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Tabla de Iteraciones</h3>
+                <span id="root-result" style="color: var(--primary-dark); font-weight: bold;"></span>
+            </div>
+            <div style="overflow-x: auto; max-height: 400px; margin-top: 10px;">
+                <table id="tabla-resultados">
+                    <thead>
+                        <tr>
+                            <th>Iter</th>
+                            <th>x_i</th>
+                            <th>f(x_i)</th>
+                            <th>x_i + δx_i</th>
+                            <th>f(x_i + δx_i)</th>
+                            <th>x_{i+1}</th>
+                            <th>Error %</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px;">
+            <section class="card" style="margin-bottom: 0;">
+                <h3>Procedimiento Paso a Paso</h3>
+                <div id="paso-a-paso" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></div>
             </section>
 
-            <section class="card">
+            <section class="card" style="margin-bottom: 0;">
                 <h3>Gráfica de Convergencia</h3>
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="graficaError"></canvas>
                 </div>
             </section>
         </div>
-
-        <section class="card" style="margin-top: 20px;">
-            <h3>Procedimiento Paso a Paso</h3>
-            <div id="paso-a-paso" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></div>
-        </section>
 
     </main>
 
