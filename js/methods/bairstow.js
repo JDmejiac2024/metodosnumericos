@@ -285,7 +285,7 @@ function borrarDatos() {
     document.querySelector('#tabla-raices tbody').innerHTML = '';
     document.getElementById('polinomio-display').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
-    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('tol').value = '0.0001'; 
     document.getElementById('valR').value = '0.5';
     document.getElementById('valS').value = '0.5';
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }

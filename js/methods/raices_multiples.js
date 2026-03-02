@@ -163,7 +163,7 @@ function borrarDatos() {
     document.getElementById('deriv1').value = '';
     document.getElementById('deriv2').value = '';
     document.getElementById('x0').value = '';
-    document.getElementById('tol').value = '0.001';
+    document.getElementById('tol').value = '0.0001';
     document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';

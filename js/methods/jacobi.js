@@ -193,7 +193,7 @@ function calcularJacobi() {
 
 // 3. Borrar Datos
 function borrarDatos() {
-    document.getElementById('tol').value = '0.001'; 
+    document.getElementById('tol').value = '0.0001'; 
     document.getElementById('maxIter').value = '100';
     crearMatrizInput(); 
     document.querySelector('#tabla-resultados tbody').innerHTML = '';

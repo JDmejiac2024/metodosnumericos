@@ -171,7 +171,7 @@ function borrarDatos() {
     document.getElementById('func').value = '';
     document.getElementById('x0').value = '';
     document.getElementById('delta').value = '0.01';
-    document.getElementById('tol').value = '0.001'; 
+    document.getElementById('tol').value = '0.0001'; 
     document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';

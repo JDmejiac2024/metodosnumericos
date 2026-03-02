@@ -150,7 +150,7 @@ function borrarDatos() {
     document.getElementById('func').value = '';
     document.getElementById('xi').value = '';
     document.getElementById('xu').value = '';
-    document.getElementById('tol').value = '0.001'; 
+    document.getElementById('tol').value = '0.0001'; 
     document.getElementById('maxIter').value = '100'; 
     
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
