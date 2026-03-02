@@ -22,7 +22,13 @@ function calcularMuller() {
     const x0Val = parseFloat(document.getElementById('x0').value);
     const x1Val = parseFloat(document.getElementById('x1').value);
     const x2Val = parseFloat(document.getElementById('x2').value);
-    const tol = parseFloat(document.getElementById('tol').value) || 0.001; // Actualizado a 0.001
+    let tol = parseFloat(document.getElementById('tol').value) || 0.0001; 
+    
+    // --- TOLERANCIA PARA LLEGAR A 0.0000 ---
+    if (tol > 0.00001) {
+        tol = 0.00001;
+    }
+
     const maxIter = parseInt(document.getElementById('maxIter').value) || 100;
 
     const tbody = document.querySelector('#tabla-resultados tbody');
@@ -93,13 +99,38 @@ function calcularMuller() {
             // Nuevo punto x3
             x3 = math.add(x2, dx);
 
-            // Calcular error (relativo a x3)
-            if (iter > 0 || math.abs(x3) > 1e-10) { 
-                 error = math.abs(math.divide(dx, x3)) * 100;
+            // Calcular Tolerancia (Magnitud de la diferencia visual en el plano complejo)
+            let tolCalculada = 0;
+            if (iter > 0) {
+                let re_curr = typeof x3 === 'number' ? x3 : x3.re;
+                let im_curr = typeof x3 === 'number' ? 0 : x3.im;
+                let re_prev = typeof x2 === 'number' ? x2 : x2.re;
+                let im_prev = typeof x2 === 'number' ? 0 : x2.im;
+
+                // Redondeo visual a 4 decimales
+                let re_currVis = parseFloat(re_curr.toFixed(4));
+                let im_currVis = parseFloat(im_curr.toFixed(4));
+                let re_prevVis = parseFloat(re_prev.toFixed(4));
+                let im_prevVis = parseFloat(im_prev.toFixed(4));
+
+                // Restamos las partes visuales
+                let diff_re = re_currVis - re_prevVis;
+                let diff_im = im_currVis - im_prevVis;
+
+                // Tolerancia Absoluta = Distancia entre raíces complejas
+                tolCalculada = Math.sqrt(diff_re * diff_re + diff_im * diff_im);
+
+                if (Math.abs(tolCalculada) < 1e-10) tolCalculada = 0;
+
+                error = Math.abs(tolCalculada);
+
+                // --- FRENO VISUAL ---
+                if (parseFloat(error.toFixed(4)) === 0) {
+                    error = 0; 
+                }
             } else {
-                 error = 100;
+                error = 100; // Forzar continuidad en la primera iteración
             }
-            if (iter === 0) error = 100;
 
             // Formatear resultados a 4 decimales
             let x3Str = formatoComplejo(x3);
@@ -111,7 +142,7 @@ function calcularMuller() {
                     <td>${iter + 1}</td>
                     <td style="font-family: monospace; font-weight:bold; color:var(--primary-dark);">${x3Str}</td>
                     <td style="font-family: monospace;">${fx3Str}</td>
-                    <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
+                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -120,7 +151,12 @@ function calcularMuller() {
             pasosLog += `Iteración ${iter + 1}:\n`;
             pasosLog += `  x0 = ${formatoComplejo(x0)}\n  x1 = ${formatoComplejo(x1)}\n  x2 = ${formatoComplejo(x2)}\n`;
             pasosLog += `  Calculado x3 = ${x3Str}\n`;
-            pasosLog += `  Error = ${iter === 0 ? '-' : error.toFixed(4) + '%'}\n\n`;
+            
+            if (iter > 0) {
+                pasosLog += `  Tolerancia (|x3 - x2|): ${tolCalculada.toFixed(4)}\n\n`;
+            } else {
+                pasosLog += `\n`;
+            }
 
             // Actualizar puntos (desplazamiento)
             x0 = x1;

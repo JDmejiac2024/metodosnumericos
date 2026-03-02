@@ -30,7 +30,13 @@ function calcularReglaFalsa() {
 
     let xi = parseFloat(xiInput); // a
     let xu = parseFloat(xuInput); // b
-    const tol = parseFloat(tolInput) || 0.001; // Actualizado a 0.001
+    let tol = parseFloat(tolInput) || 0.0001; 
+    
+    // Tolerancia internamente para obligar a llegar a 0.0000
+    if (tol > 0.00001) {
+        tol = 0.00001;
+    }
+
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {
@@ -58,16 +64,32 @@ function calcularReglaFalsa() {
             let fb = f(xu);
 
             // --- FÓRMULA DE REGLA FALSA ---
-            // xr = xu - ( f(xu) * (xi - xu) ) / ( f(xi) - f(xu) )
             xr = xu - (fb * (xi - xu)) / (fa - fb);
-            
             let fxr = f(xr);
 
-            // Calcular Error
+            // Cálculo de la Tolerancia (Tolerancia = xr_anterior - xr_actual)
+            let tolCalculada = 0;
             if (iter > 0) {
-                error = Math.abs((xr - xrAnt) / xr) * 100;
+                // REDONDEO PREVIO: Extraemos los valores exactos de la tabla visual
+                let xrAntVisual = parseFloat(xrAnt.toFixed(4));
+                let xrVisual = parseFloat(xr.toFixed(4));
+
+                // Restamos los valores visuales para que cuadre la matemática manual
+                tolCalculada = xrAntVisual - xrVisual;
+                
+                // Limpiar posibles errores de punto flotante (-0.0000)
+                if (Math.abs(tolCalculada) < 1e-10) tolCalculada = 0;
+                
+                // Usamos el valor absoluto para la condición de parada
+                error = Math.abs(tolCalculada); 
+
+                // --- FRENO VISUAL ---
+                // Si visualmente al redondear a 4 decimales ya es 0.0000, forzamos la salida.
+                if (parseFloat(error.toFixed(4)) === 0) {
+                    error = 0; 
+                }
             } else {
-                error = 100;
+                error = 100; // Forzar la continuidad en la primera iteración
             }
 
             // Actualizar Tabla (Con 4 decimales)
@@ -80,7 +102,7 @@ function calcularReglaFalsa() {
                     <td>${fb.toFixed(4)}</td>
                     <td style="font-weight:bold; color:#2C3E50">${xr.toFixed(4)}</td>
                     <td>${fxr.toFixed(4)}</td>
-                    <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
+                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -90,6 +112,9 @@ function calcularReglaFalsa() {
             pasosLog += `  a=${xi.toFixed(4)}, b=${xu.toFixed(4)}\n`;
             pasosLog += `  f(a)=${fa.toFixed(4)}, f(b)=${fb.toFixed(4)}\n`;
             pasosLog += `  Aplicando fórmula Regla Falsa -> xr = ${xr.toFixed(4)}\n`;
+            if (iter > 0) {
+                pasosLog += `  Tolerancia (xr_ant - xr): ${xrAnt.toFixed(4)} - ${xr.toFixed(4)} = ${tolCalculada.toFixed(4)}\n`;
+            }
             
             // Decisión de cambio de intervalo
             if (fa * fxr < 0) {
@@ -100,8 +125,11 @@ function calcularReglaFalsa() {
                 pasosLog += `  f(a)*f(xr) > 0. La raíz está entre [xr, b]. Nuevo a = ${xr.toFixed(4)}\n\n`;
             }
 
+            // Guardar datos para la gráfica (graficamos el valor absoluto de la tolerancia)
             labels.push(iter + 1);
-            dataError.push(error);
+            if(iter > 0) dataError.push(Math.abs(tolCalculada)); 
+            else dataError.push(null);
+
             iter++;
         }
 
@@ -120,7 +148,7 @@ function borrarDatos() {
     document.getElementById('func').value = '';
     document.getElementById('xi').value = '';
     document.getElementById('xu').value = '';
-    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('tol').value = '0.001'; 
     document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
@@ -137,7 +165,7 @@ function generarGrafica(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: '% Error Relativo',
+                label: 'Tolerancia Absoluta',
                 data: data,
                 borderColor: '#D64545',
                 backgroundColor: 'rgba(214, 69, 69, 0.1)',
@@ -151,7 +179,7 @@ function generarGrafica(labels, data) {
             responsive: true, 
             maintainAspectRatio: false,
             scales: { 
-                y: { beginAtZero: true, title: { display: true, text: 'Porcentaje de Error' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Tolerancia' } },
                 x: { title: { display: true, text: 'Iteración' } }
             } 
         }
@@ -172,7 +200,7 @@ function exportarPDF() {
     doc.text(`Función: ${document.getElementById('func').value}`, 14, 30);
     doc.text(`Raíz: ${document.getElementById('root-result').textContent}`, 14, 38);
     
-    // Ajuste de tabla en PDF para las columnas extra
+    // Ajuste de tabla en PDF
     doc.autoTable({ 
         html: '#tabla-resultados', 
         startY: 45, 

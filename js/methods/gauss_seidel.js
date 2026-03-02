@@ -39,7 +39,13 @@ function crearMatrizInput() {
 // 2. Función Principal: Calcular Gauss-Seidel
 function calcularGaussSeidel() {
     const n = currentDim;
-    const tol = parseFloat(document.getElementById('tol').value) || 0.001; // Estandarizado a 0.001
+    let tol = parseFloat(document.getElementById('tol').value) || 0.0001; 
+    
+    // --- TOLERANCIA PARA LLEGAR A 0.0000 ---
+    if (tol > 0.00001) {
+        tol = 0.00001;
+    }
+
     const maxIter = parseInt(document.getElementById('maxIter').value) || 100;
     
     const tbody = document.querySelector('#tabla-resultados tbody');
@@ -101,7 +107,7 @@ function calcularGaussSeidel() {
     // --- C. Configurar Tabla ---
     let heads = '<th>Iter</th>';
     for(let i=0; i<n; i++) heads += `<th>x${i+1}</th>`;
-    heads += '<th>Error</th>';
+    heads += '<th>Tolerancia</th>'; // Actualizado dinámicamente
     theadRow.innerHTML = heads;
 
     // --- D. Algoritmo Gauss-Seidel ---
@@ -109,7 +115,7 @@ function calcularGaussSeidel() {
     let iter = 0;
     let labels = [];
     let dataError = [];
-    let x_old = []; // Para calcular el error comparando con la iteración anterior
+    let x_old = []; 
 
     while (error > tol && iter < maxIter) {
         
@@ -121,24 +127,30 @@ function calcularGaussSeidel() {
             let sigma = 0;
             for (let j = 0; j < n; j++) {
                 if (j !== i) {
-                    // AQUÍ ESTÁ LA MAGIA DE GAUSS-SEIDEL:
-                    // Usamos x[j] directamente del array 'x'. 
-                    // Si j < i, x[j] ya fue actualizado en este ciclo (valor nuevo).
-                    // Si j > i, x[j] es valor del ciclo anterior (valor viejo).
                     sigma += A[i][j] * x[j];
                 }
             }
             x[i] = (b[i] - sigma) / A[i][i]; // Actualización inmediata
         }
 
-        // Calcular Error (Norma Euclidiana entre x actual y x_old)
-        let sumDiffSq = 0;
-        for (let i = 0; i < n; i++) {
-            sumDiffSq += Math.pow(x[i] - x_old[i], 2);
-        }
-        error = Math.sqrt(sumDiffSq);
+        // Cálculo de Tolerancia (Norma Euclidiana con Redondeo Visual)
+        if (iter > 0) {
+            let sumDiffSq = 0;
+            for (let i = 0; i < n; i++) {
+                // REDONDEO PREVIO a 4 decimales para que coincida manual vs sistema
+                let currVis = parseFloat(x[i].toFixed(4));
+                let oldVis = parseFloat(x_old[i].toFixed(4));
+                sumDiffSq += Math.pow(currVis - oldVis, 2);
+            }
+            error = Math.sqrt(sumDiffSq);
 
-        if(iter === 0) error = 100; 
+            // --- FRENO VISUAL ---
+            if (parseFloat(error.toFixed(4)) === 0) {
+                error = 0; 
+            }
+        } else {
+            error = 100; // Forzar continuidad en la primera iteración
+        }
 
         // Tabla con 4 decimales
         let rowHtml = `<td>${iter + 1}</td>`;
@@ -150,7 +162,8 @@ function calcularGaussSeidel() {
         
         // Gráfica
         labels.push(iter + 1);
-        dataError.push(error);
+        if (iter > 0) dataError.push(error);
+        else dataError.push(null);
         
         if (error > 1e10) {
             msgError.textContent = "El método diverge (valores infinitos).";
@@ -164,7 +177,6 @@ function calcularGaussSeidel() {
     let resLog = warningMsg;
     resLog += `Solución aproximada en ${iter} iteraciones:\n`;
     for(let i=0; i<n; i++) {
-        // Formato final a 4 decimales
         resLog += `x${i+1} = ${x[i].toFixed(4)}\n`;
     }
     resultDiv.textContent = resLog;
@@ -192,7 +204,7 @@ function generarGrafica(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Error (Norma)',
+                label: 'Tolerancia (Norma)',
                 data: data,
                 borderColor: '#D64545', // Color para diferenciar de Jacobi
                 backgroundColor: 'rgba(214, 69, 69, 0.1)',
@@ -206,7 +218,7 @@ function generarGrafica(labels, data) {
             responsive: true, 
             maintainAspectRatio: false,
             scales: { 
-                y: { beginAtZero: true, title: { display: true, text: 'Norma del Error' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Tolerancia' } },
                 x: { title: { display: true, text: 'Iteración' } }
             } 
         }
@@ -229,7 +241,7 @@ function exportarPDF() {
     const splitTitle = doc.splitTextToSize(finalRes, 180);
     doc.text(splitTitle, 14, 30);
 
-    // Ajuste dinámico de fuente para la tabla (por si es matriz muy grande)
+    // Ajuste dinámico de fuente para la tabla
     let fontSizeTable = currentDim > 5 ? 7 : 9;
 
     doc.autoTable({ 
@@ -251,7 +263,7 @@ function exportarPDF() {
         
         doc.setFontSize(14);
         doc.setTextColor(31, 58, 95);
-        doc.text("Gráfica de Convergencia del Error", 14, finalY);
+        doc.text("Gráfica de Convergencia", 14, finalY);
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     doc.save("GaussSeidel_Reporte.pdf");

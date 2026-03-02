@@ -26,7 +26,13 @@ function calcularRaicesMultiples() {
     }
 
     let xi = parseFloat(x0Input);
-    const tol = parseFloat(tolInput) || 0.001;
+    let tol = parseFloat(tolInput) || 0.0001;
+    
+    // --- TOLERANCIA PARA LLEGAR A 0.0000 ---
+    if (tol > 0.00001) {
+        tol = 0.00001;
+    }
+
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {
@@ -56,7 +62,7 @@ function calcularRaicesMultiples() {
                     <td>-</td>
                     <td>-</td>
                     <td style="font-weight:bold; color:#2C3E50">${xi.toFixed(4)}</td>
-                    <td>0.0000%</td>
+                    <td>0.0000</td>
                 </tr>`;
                 break; 
             }
@@ -79,16 +85,32 @@ function calcularRaicesMultiples() {
                 return;
             }
 
+            // Fórmula: xi+1 = xi - (f(xi)*f'(xi)) / ((f'(xi))^2 - f(xi)*f''(xi))
             xi_new = xi - (numerador / denominador);
 
-            if (iter > 0 || iter === 0) {
-                if (Math.abs(xi_new) > 0) {
-                     error = Math.abs((xi_new - xi) / xi_new) * 100;
-                } else {
-                     error = Math.abs(xi_new - xi) * 100;
+            // Cálculo de la Tolerancia
+            let tolCalculada = 0;
+            if (iter > 0) {
+                // REDONDEO PREVIO: Extraemos los valores exactos de la tabla visual
+                let xiVisual = parseFloat(xi.toFixed(4));
+                let xi_newVisual = parseFloat(xi_new.toFixed(4));
+
+                // Restamos la raíz anterior (xi) menos la raíz actual (xi_new)
+                tolCalculada = xiVisual - xi_newVisual;
+
+                // Limpiar posibles errores de punto flotante (-0.0000)
+                if (Math.abs(tolCalculada) < 1e-10) tolCalculada = 0;
+
+                // Usamos el valor absoluto para la condición de parada
+                error = Math.abs(tolCalculada);
+
+                // --- FRENO VISUAL ---
+                if (parseFloat(error.toFixed(4)) === 0) {
+                    error = 0; 
                 }
+            } else {
+                error = 100; // Forzar que siga en la primera iteración
             }
-            if (iter === 0) error = 100;
 
             // Tabla (7 Columnas a 4 decimales)
             const fila = `
@@ -99,7 +121,7 @@ function calcularRaicesMultiples() {
                     <td>${df_xi.toFixed(4)}</td>
                     <td>${d2f_xi.toFixed(4)}</td>
                     <td style="font-weight:bold; color:#2C3E50">${xi_new.toFixed(4)}</td>
-                    <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
+                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -109,15 +131,23 @@ function calcularRaicesMultiples() {
             pasosLog += `  x_i = ${xi.toFixed(4)}\n`;
             pasosLog += `  f(x_i) = ${f_xi.toFixed(4)}, f'(x_i) = ${df_xi.toFixed(4)}, f''(x_i) = ${d2f_xi.toFixed(4)}\n`;
             pasosLog += `  x_{i+1} = ${xi_new.toFixed(4)}\n`;
-            pasosLog += `  Error = ${iter === 0 ? '-' : error.toFixed(4) + '%'}\n\n`;
+            
+            if (iter > 0) {
+                pasosLog += `  Tolerancia (x_i - x_{i+1}): ${xi.toFixed(4)} - ${xi_new.toFixed(4)} = ${tolCalculada.toFixed(4)}\n\n`;
+            } else {
+                pasosLog += `\n`;
+            }
 
             xi = xi_new;
+            
             labels.push(iter + 1);
-            dataError.push(error);
+            if(iter > 0) dataError.push(Math.abs(tolCalculada));
+            else dataError.push(null);
+            
             iter++;
         }
 
-        pasosLog += `\n--- FIN DEL PROCESO ---\nRaíz aproximada: ${xi.toFixed(4)}`;
+        pasosLog += `--- FIN DEL PROCESO ---\nRaíz aproximada: ${xi.toFixed(4)}`;
         pasoDiv.textContent = pasosLog;
         rootResult.textContent = `Raíz: ${xi.toFixed(4)}`;
         
@@ -151,7 +181,7 @@ function generarGrafica(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: '% Error Relativo',
+                label: 'Tolerancia Absoluta',
                 data: data,
                 borderColor: '#D64545',
                 backgroundColor: 'rgba(47, 109, 179, 0.1)',
@@ -165,7 +195,7 @@ function generarGrafica(labels, data) {
             responsive: true, 
             maintainAspectRatio: false,
             scales: { 
-                y: { beginAtZero: true, title: { display: true, text: 'Porcentaje de Error' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Tolerancia' } },
                 x: { title: { display: true, text: 'Iteración' } }
             } 
         }

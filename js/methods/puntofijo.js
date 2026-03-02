@@ -30,7 +30,13 @@ function calcularPuntoFijo() {
     }
 
     let xi = parseFloat(x0Input);
-    const tol = parseFloat(tolInput) || 0.001; // Actualizado a 0.001
+    let tol = parseFloat(tolInput) || 0.0001; 
+    
+    // --- TOLERANCIA PARA LLEGAR A 0.0000 ---
+    if (tol > 0.00001) {
+        tol = 0.00001;
+    }
+
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {
@@ -62,24 +68,38 @@ function calcularPuntoFijo() {
                 return;
             }
 
-            // Calcular Error Relativo
-            if (iter > 0 || iter === 0) {
-                 if (Math.abs(xi_new) > 0) {
-                     error = Math.abs((xi_new - xi) / xi_new) * 100;
-                 } else {
-                     error = Math.abs(xi_new - xi) * 100;
-                 }
-            }
-            if (iter === 0) error = 100;
+            // Cálculo de la Tolerancia
+            let tolCalculada = 0;
+            if (iter > 0) {
+                // REDONDEO PREVIO: Extraemos los valores exactos de la tabla visual
+                let xiVisual = parseFloat(xi.toFixed(4));
+                let xi_newVisual = parseFloat(xi_new.toFixed(4));
 
-            // Llenar Tabla (Con 4 decimales estandarizados y columna x_{i+1})
+                // Restamos el valor anterior (xi) menos el nuevo (xi_new)
+                tolCalculada = xiVisual - xi_newVisual;
+
+                // Limpiar posibles errores de punto flotante (-0.0000)
+                if (Math.abs(tolCalculada) < 1e-10) tolCalculada = 0;
+
+                // Usamos el valor absoluto para la condición de parada del while
+                error = Math.abs(tolCalculada);
+
+                // --- FRENO VISUAL ---
+                if (parseFloat(error.toFixed(4)) === 0) {
+                    error = 0; 
+                }
+            } else {
+                error = 100; // Forzar que siga en la primera iteración
+            }
+
+            // Llenar Tabla (Con 4 decimales estandarizados)
             const fila = `
                 <tr>
                     <td>${iter + 1}</td>
                     <td>${xi.toFixed(4)}</td>
                     <td>${xi_new.toFixed(4)}</td>
                     <td style="font-weight:bold; color:#2C3E50">${xi_new.toFixed(4)}</td>
-                    <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
+                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -89,19 +109,26 @@ function calcularPuntoFijo() {
             pasosLog += `  x_i = ${xi.toFixed(4)}\n`;
             pasosLog += `  g(x_i) = ${xi_new.toFixed(4)}\n`;
             pasosLog += `  x_{i+1} = ${xi_new.toFixed(4)}\n`;
-            pasosLog += `  Error = ${iter === 0 ? '-' : error.toFixed(4) + '%'}\n\n`;
+            
+            if (iter > 0) {
+                pasosLog += `  Tolerancia (x_i - x_{i+1}): ${xi.toFixed(4)} - ${xi_new.toFixed(4)} = ${tolCalculada.toFixed(4)}\n\n`;
+            } else {
+                pasosLog += `\n`;
+            }
 
             // Actualizar
             xi = xi_new;
             
+            // Datos Gráfica
             labels.push(iter + 1);
-            dataError.push(error);
+            if(iter > 0) dataError.push(Math.abs(tolCalculada));
+            else dataError.push(null);
 
             iter++;
         }
 
         pasoDiv.textContent = pasosLog;
-        rootResult.textContent = `Raíz aprox: ${xi.toFixed(4)}`; // 4 decimales
+        rootResult.textContent = `Raíz aprox: ${xi.toFixed(4)}`; 
         
         // Si hay f(x), mostramos cuánto vale f en la raíz encontrada con 4 decimales
         if (f) {
@@ -121,7 +148,7 @@ function borrarDatos() {
     document.getElementById('func').value = '';
     document.getElementById('gx').value = '';
     document.getElementById('x0').value = '';
-    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('tol').value = '0.001'; 
     document.getElementById('maxIter').value = '100';
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
@@ -139,7 +166,7 @@ function generarGrafica(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: '% Error Relativo',
+                label: 'Tolerancia Absoluta',
                 data: data,
                 borderColor: '#D64545', // Color para Punto Fijo
                 backgroundColor: 'rgba(214, 69, 69, 0.1)',
@@ -153,7 +180,7 @@ function generarGrafica(labels, data) {
             responsive: true, 
             maintainAspectRatio: false,
             scales: { 
-                y: { beginAtZero: true, title: { display: true, text: 'Porcentaje de Error' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Tolerancia' } },
                 x: { title: { display: true, text: 'Iteración' } }
             } 
         }

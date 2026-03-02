@@ -35,7 +35,13 @@ function calcularBiseccion() {
     // Convertir a números
     let xi = parseFloat(xiInput);
     let xu = parseFloat(xuInput);
-    const tol = parseFloat(tolInput) || 0.001; // Valor por defecto actualizado a 0.001
+    let tol = parseFloat(tolInput) || 0.0001; 
+    
+    // Tolerancia internamente para obligar a llegar a 0.0000
+    if (tol > 0.00001) {
+        tol = 0.00001;
+    }
+
     const maxIter = parseInt(maxIterInput) || 100;
 
     try {
@@ -49,15 +55,14 @@ function calcularBiseccion() {
         }
 
         // --- INICIO DEL ALGORITMO DE BISECCIÓN ---
-        let xr = 0;      // Raíz actual
-        let xrAnt = 0;   // Raíz anterior
-        let error = 100; // Error inicial (100%)
+        let xr = 0;      
+        let xrAnt = 0;   
+        let error = 100; // Usado internamente para controlar el bucle
         let iter = 0;
         
-        // Arrays para guardar datos de la gráfica
         let labels = [];
         let dataError = [];
-        let pasosLog = ""; // Texto del procedimiento
+        let pasosLog = ""; 
 
         while (error > tol && iter < maxIter) {
             xrAnt = xr;
@@ -70,14 +75,26 @@ function calcularBiseccion() {
             let fb = f(xu);
             let fxr = f(xr);
 
-            // Cálculo del Error Relativo
+            // Cálculo de la Tolerancia (Tolerancia = xr_anterior - xr_actual)
+            let tolCalculada = 0;
             if (iter > 0) {
-                error = Math.abs((xr - xrAnt) / xr) * 100;
+                // REDONDEO PREVIO: Extraemos los valores exactos de la tabla visual
+                let xrAntVisual = parseFloat(xrAnt.toFixed(4));
+                let xrVisual = parseFloat(xr.toFixed(4));
+
+                // Restamos los valores visuales para que cuadre la matemática manual
+                tolCalculada = xrAntVisual - xrVisual;
+                
+                // Limpiar posibles errores de punto flotante (-0.0000)
+                if (Math.abs(tolCalculada) < 1e-10) tolCalculada = 0;
+                
+                // Usamos el valor absoluto para la condición de parada del while
+                error = Math.abs(tolCalculada); 
             } else {
-                error = 100; // 100% en la primera iteración
+                error = 100; // Forzar que siga en la primera iteración
             }
 
-            // 1. Agregar fila a la tabla HTML (AHORA CON 4 DECIMALES MAX)
+            // 1. Agregar fila a la tabla HTML
             const fila = `
                 <tr>
                     <td>${iter + 1}</td>
@@ -87,15 +104,18 @@ function calcularBiseccion() {
                     <td>${fb.toFixed(4)}</td>
                     <td style="font-weight:bold; color:#2C3E50">${xr.toFixed(4)}</td>
                     <td>${fxr.toFixed(4)}</td>
-                    <td>${iter === 0 ? '-' : error.toFixed(4) + '%'}</td>
+                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
 
-            // 2. Registrar explicación en el Paso a Paso (4 decimales)
+            // 2. Registrar explicación en el Paso a Paso
             pasosLog += `Iteración ${iter + 1}:\n`;
             pasosLog += `  Intervalo: [${xi.toFixed(4)}, ${xu.toFixed(4)}]\n`;
             pasosLog += `  Raíz (xr): ${xr.toFixed(4)}\n`;
+            if (iter > 0) {
+                pasosLog += `  Tolerancia (xr_ant - xr): ${xrAnt.toFixed(4)} - ${xr.toFixed(4)} = ${tolCalculada.toFixed(4)}\n`;
+            }
             
             // 3. Lógica de cambio de límites
             if (fa * fxr < 0) {
@@ -108,17 +128,16 @@ function calcularBiseccion() {
 
             // 4. Guardar datos para la gráfica
             labels.push(iter + 1);
-            dataError.push(error);
+            if(iter > 0) dataError.push(Math.abs(tolCalculada)); 
+            else dataError.push(null); 
 
             iter++;
         }
         // --- FIN DEL ALGORITMO ---
 
-        // Mostrar resultados finales con 4 decimales
         pasoDiv.textContent = pasosLog;
         rootResult.textContent = `Raíz aprox: ${xr.toFixed(4)}`;
         
-        // Generar la gráfica
         generarGrafica(labels, dataError);
 
     } catch (e) {
@@ -127,47 +146,35 @@ function calcularBiseccion() {
     }
 }
 
-// ==========================================
-// FUNCIÓN: BORRAR TODO
-// ==========================================
 function borrarDatos() {
-    // 1. Limpiar Inputs
     document.getElementById('func').value = '';
     document.getElementById('xi').value = '';
     document.getElementById('xu').value = '';
-    document.getElementById('tol').value = '0.001'; // Actualizado a 0.001
+    document.getElementById('tol').value = '0.001'; 
     document.getElementById('maxIter').value = '100'; 
     
-    // 2. Limpiar Resultados visuales
     document.querySelector('#tabla-resultados tbody').innerHTML = '';
     document.getElementById('error-msg').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
     document.getElementById('root-result').textContent = '';
 
-    // 3. Destruir la gráfica si existe
     if (chartInstance) {
         chartInstance.destroy();
         chartInstance = null;
     }
 }
 
-// ==========================================
-// FUNCIÓN: GENERAR GRÁFICA
-// ==========================================
 function generarGrafica(labels, data) {
     const ctx = document.getElementById('graficaError').getContext('2d');
     
-    // Destruir previa si existe para evitar superposición
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
+    if (chartInstance) chartInstance.destroy();
 
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: '% Error Relativo',
+                label: 'Tolerancia Absoluta',
                 data: data,
                 borderColor: '#D64545',
                 backgroundColor: 'rgba(214, 69, 69, 0.1)',
@@ -183,7 +190,7 @@ function generarGrafica(labels, data) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Porcentaje de Error' }
+                    title: { display: true, text: 'Tolerancia' }
                 },
                 x: {
                     title: { display: true, text: 'Iteración' }
@@ -193,11 +200,7 @@ function generarGrafica(labels, data) {
     });
 }
 
-// ==========================================
-// FUNCIÓN: EXPORTAR A PDF (CON GRÁFICA)
-// ==========================================
 function exportarPDF() {
-    // 1. Validar si hay datos
     const tbody = document.querySelector('#tabla-resultados tbody');
     if (tbody.children.length === 0) {
         alert("Primero debes calcular un resultado para poder exportarlo.");
@@ -207,7 +210,6 @@ function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // 2. Encabezado
     doc.setFontSize(18);
     doc.setTextColor(44, 62, 80);
     doc.text("Reporte: Método de Bisección", 14, 20);
@@ -218,26 +220,22 @@ function exportarPDF() {
     doc.text(`Intervalo Final: [${document.getElementById('xi').value}, ${document.getElementById('xu').value}]`, 14, 36);
     doc.text(`Raíz Aprox: ${document.getElementById('root-result').textContent}`, 14, 42);
 
-    // 3. Generar Tabla con fuente más pequeña para acomodar las nuevas columnas
     doc.autoTable({
         html: '#tabla-resultados',
         startY: 50,
         theme: 'grid',
         headStyles: { fillColor: [44, 62, 80] },
-        styles: { fontSize: 9, cellPadding: 2 } // Ajuste de tamaño de fuente
+        styles: { fontSize: 9, cellPadding: 2 } 
     });
 
-    // 4. Capturar e insertar Gráfica
     const canvas = document.getElementById('graficaError');
     if (canvas) {
         const imgData = canvas.toDataURL('image/png');
         
-        // Calcular posición debajo de la tabla
         let finalY = doc.lastAutoTable.finalY + 10; 
         const pageHeight = doc.internal.pageSize.height;
         const imgHeight = 80; 
 
-        // Verificar salto de página
         if (finalY + imgHeight > pageHeight) {
             doc.addPage();
             finalY = 20; 
@@ -249,6 +247,5 @@ function exportarPDF() {
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
 
-    // 5. Guardar
     doc.save("Reporte_Biseccion_Completo.pdf");
 }
