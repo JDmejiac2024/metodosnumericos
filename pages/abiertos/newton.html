@@ -42,12 +42,12 @@
                 <i class="fas fa-chevron-down arrow"></i>
             </button>
             <div class="dropdown-content show">
-                <a href="../abiertos/newton.html" class="sub-link active">Newton-Raphson</a>
-                <a href="../abiertos/secante.html" class="sub-link">Secante</a>
-                <a href="../abiertos/puntofijo.html" class="sub-link">Punto Fijo</a>
-                <a href="../abiertos/raices_multiples.html" class="sub-link">Raíces Múltiples</a>
-                <a href="../abiertos/secante_modificado.html" class="sub-link">Secante Modificado</a>
-                <a href="../abiertos/steffensen.html" class="sub-link">Steffensen</a>
+                <a href="newton.html" class="sub-link active">Newton-Raphson</a>
+                <a href="secante.html" class="sub-link">Secante</a>
+                <a href="puntofijo.html" class="sub-link">Punto Fijo</a>
+                <a href="raices_multiples.html" class="sub-link">Raíces Múltiples</a>
+                <a href="secante_modificado.html" class="sub-link">Secante Modificado</a>
+                <a href="steffensen.html" class="sub-link">Steffensen</a>
             </div>
         </div>
         
@@ -100,17 +100,16 @@
             <div class="input-group">
                 <div class="form-control">
                     <label for="func">Función f(x):</label>
-                    <input type="text" id="func" placeholder="Ej: x^2 - 4" autocomplete="off">
+                    <input type="text" id="func" placeholder="Ej: x^2 - 3*x - 4" autocomplete="off">
                 </div>
                 
                 <div class="form-control">
                     <label for="deriv">Derivada f'(x):</label>
-                    <input type="text" id="deriv" placeholder="Ej: 2*x" autocomplete="off">
-                    <small>La derivada exacta de f(x)</small>
+                    <input type="text" id="deriv" readonly style="background-color: #f0f4f8; cursor: not-allowed; color: #2C3E50; font-weight: bold;" placeholder="Se calculará sola...">
                 </div>
 
                 <div class="form-control">
-                    <label for="x0">Valor Inicial (x_0):</label>
+                    <label for="x0">Valor Inicial (x_i):</label>
                     <input type="number" id="x0" step="any" value="3">
                 </div>
 
@@ -141,11 +140,11 @@
                 <table id="tabla-resultados">
                     <thead>
                         <tr>
-                            <th>Iter</th>
-                            <th>x_i</th>
-                            <th>f(x_i)</th>
-                            <th>f'(x_i)</th>
-                            <th>x_{i+1}</th>
+                            <th>i</th>
+                            <th>xi</th>
+                            <th>f(xi)</th>
+                            <th>f'(xi)</th>
+                            <th>xr</th>
                             <th>Tol</th>
                         </tr>
                     </thead>
@@ -161,7 +160,7 @@
             </section>
 
             <section class="card" style="margin-bottom: 0;">
-                <h3>Gráfica de Tolerancia</h3>
+                <h3>Gráfica de Tolerancia Absoluta</h3>
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="graficaError"></canvas>
                 </div>
