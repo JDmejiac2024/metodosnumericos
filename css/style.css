@@ -257,7 +257,7 @@ header button:hover {
 
 .form-control label {
     font-size: 0.85rem;
-    text-transform: uppercase;
+    text-transform: none;
     letter-spacing: 0.5px;
     margin-bottom: 8px;
     font-weight: 700;
@@ -310,7 +310,7 @@ header button:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    text-transform: uppercase;
+    text-transform: none;
     letter-spacing: 0.5px;
 }
 
