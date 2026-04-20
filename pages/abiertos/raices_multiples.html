@@ -100,38 +100,41 @@
             <div class="input-group">
                 <div class="form-control">
                     <label for="func">Función f(x):</label>
-                    <input type="text" id="func" placeholder="Ej: x^3 - 5x^2 + 7x - 3" autocomplete="off">
+                    <input type="text" id="func" placeholder="Ej: 2.5*x^2 - 6.2*x + 2.2" autocomplete="off">
                 </div>
                 
                 <div class="form-control">
-                    <label for="deriv1">Derivada f'(x):</label>
-                    <input type="text" id="deriv1" placeholder="Ej: 3*x^2 - 10*x + 7" autocomplete="off">
+                    <label for="deriv1">Derivada f'(x) (Automática):</label>
+                    <input type="text" id="deriv1" readonly style="background-color: #f0f4f8; cursor: not-allowed; color: #2C3E50; font-weight: bold;" placeholder="Se calculará sola...">
                 </div>
 
                 <div class="form-control">
-                    <label for="deriv2">2da Derivada f''(x):</label>
-                    <input type="text" id="deriv2" placeholder="Ej: 6*x - 10" autocomplete="off">
+                    <label for="deriv2">2da Derivada f''(x) (Automática):</label>
+                    <input type="text" id="deriv2" readonly style="background-color: #f0f4f8; cursor: not-allowed; color: #2C3E50; font-weight: bold;" placeholder="Se calculará sola...">
                 </div>
             </div>
 
-            <div class="input-group">
+            <div class="input-group" style="border-top: 1px solid var(--border); margin-top: 15px; padding-top: 15px;">
                 <div class="form-control">
-                    <label for="x0">Valor Inicial (x_0):</label>
-                    <input type="number" id="x0" step="any" value="0">
+                    <label for="xMin">Rango Mínimo:</label>
+                    <input type="number" id="xMin" step="any" value="-5">
                 </div>
-
+                <div class="form-control">
+                    <label for="xMax">Rango Máximo:</label>
+                    <input type="number" id="xMax" step="any" value="5">
+                </div>
+                <div class="form-control">
+                    <label for="paso">Paso:</label>
+                    <input type="number" id="paso" step="any" value="1">
+                </div>
                 <div class="form-control">
                     <label for="tol">Tolerancia:</label>
                     <input type="number" id="tol" step="any" value="0.0001">
                 </div>
-                <div class="form-control">
-                    <label for="maxIter">Máx. Iteraciones:</label>
-                    <input type="number" id="maxIter" value="100">
-                </div>
             </div>
 
             <div class="action-buttons">
-                <button class="btn-calculate" onclick="calcularRaicesMultiples()">Calcular Raíz</button>
+                <button class="btn-calculate" onclick="calcularRaicesMultiples()">Escanear y Calcular Raíces</button>
                 <button class="btn-clear" onclick="borrarDatos()">Borrar Todo</button>
             </div>
             
@@ -140,35 +143,22 @@
 
         <section class="card" style="margin-top: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>Tabla de Iteraciones</h3>
+                <h3>Tablas de Iteraciones por Raíz</h3>
                 <span id="root-result" style="color: var(--primary-dark); font-weight: bold;"></span>
             </div>
-            <div style="overflow-x: auto; max-height: 400px; margin-top: 10px;">
-                <table id="tabla-resultados">
-                    <thead>
-                        <tr>
-                            <th>Iter</th>
-                            <th>x_i</th>
-                            <th>f(x_i)</th>
-                            <th>f'(x_i)</th>
-                            <th>f''(x_i)</th>
-                            <th>x_{i+1}</th>
-                            <th>Tol</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <div id="tablas-container" style="overflow-x: auto; max-height: 500px; margin-top: 10px;">
+                <p style="color: var(--text-secondary); font-style: italic;">Inicia el cálculo para generar las tablas.</p>
             </div>
         </section>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px;">
             <section class="card" style="margin-bottom: 0;">
                 <h3>Procedimiento Paso a Paso</h3>
-                <div id="paso-a-paso" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></div>
+                <div id="paso-a-paso" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 0.9em; background: #f9f9f9; padding: 10px; border-radius: 5px;"></div>
             </section>
 
             <section class="card" style="margin-bottom: 0;">
-                <h3>Gráfica de Tolerancia</h3>
+                <h3>Gráfica Integrada de la Función</h3>
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="graficaError"></canvas>
                 </div>
