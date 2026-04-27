@@ -53,7 +53,7 @@ function calcularMuller() {
             try {
                 return math.evaluate(funcStr, { x: x });
             } catch (e) {
-                return math.complex(0, 0); // Evitar cuelgues si falla temporalmente
+                return math.complex(0, 0); 
             }
         };
 
@@ -70,28 +70,38 @@ function calcularMuller() {
         // --- BUCLE MÜLLER ---
         while (error > tol && iter < maxIter) {
             
-            // Evaluar función en los 3 puntos
+            // Evaluaciones de la función
+            let fx0 = f(x0);
+            let fx1 = f(x1);
+            let fx2 = f(x2);
+
+            // Cálculos de h y d
             let h0 = math.subtract(x1, x0);
             let h1 = math.subtract(x2, x1);
             
-            let d0 = math.divide(math.subtract(f(x1), f(x0)), h0);
-            let d1 = math.divide(math.subtract(f(x2), f(x1)), h1);
+            let d0 = math.divide(math.subtract(fx1, fx0), h0);
+            let d1 = math.divide(math.subtract(fx2, fx1), h1);
             
             // Coeficientes de la parábola: a*x^2 + b*x + c
             let a = math.divide(math.subtract(d1, d0), math.add(h1, h0));
-            // Cálculo de b simplificado para Müller
-            let b = math.add(d1, math.multiply(h1, a));
-            
-            let c = f(x2);
+            // b = (a * h1) + d1
+            let b = math.add(math.multiply(a, h1), d1);
+            let c = fx2;
+
+            // --- LÓGICA DEL SIGNO BASADA EN 'b' ---
+            let b_re = (typeof b === 'number') ? b : b.re;
+            let signStr = (b_re >= 0) ? '+' : '-';
 
             // Discriminante: sqrt(b^2 - 4*a*c)
             let rad = math.sqrt(math.subtract(math.multiply(b, b), math.multiply(4, math.multiply(a, c))));
 
-            // Elegir signo que maximice el denominador (para minimizar error)
-            let den1 = math.add(b, rad);
-            let den2 = math.subtract(b, rad);
-            
-            let den = (math.abs(den1) > math.abs(den2)) ? den1 : den2;
+            // Elegir el denominador según el signo de b
+            let den;
+            if (b_re >= 0) {
+                den = math.add(b, rad);
+            } else {
+                den = math.subtract(b, rad);
+            }
 
             // Calcular dx (diferencia para el nuevo punto)
             let dx = math.divide(math.multiply(-2, c), den);
@@ -99,66 +109,55 @@ function calcularMuller() {
             // Nuevo punto x3
             x3 = math.add(x2, dx);
 
-            // Calcular Tolerancia (Magnitud de la diferencia visual en el plano complejo)
-            let tolCalculada = 0;
-            if (iter > 0) {
-                let re_curr = typeof x3 === 'number' ? x3 : x3.re;
-                let im_curr = typeof x3 === 'number' ? 0 : x3.im;
-                let re_prev = typeof x2 === 'number' ? x2 : x2.re;
-                let im_prev = typeof x2 === 'number' ? 0 : x2.im;
-
-                // Redondeo visual a 4 decimales
-                let re_currVis = parseFloat(re_curr.toFixed(4));
-                let im_currVis = parseFloat(im_curr.toFixed(4));
-                let re_prevVis = parseFloat(re_prev.toFixed(4));
-                let im_prevVis = parseFloat(im_prev.toFixed(4));
-
-                // Restamos las partes visuales
-                let diff_re = re_currVis - re_prevVis;
-                let diff_im = im_currVis - im_prevVis;
-
-                // Tolerancia Absoluta = Distancia entre raíces complejas
-                tolCalculada = Math.sqrt(diff_re * diff_re + diff_im * diff_im);
-
-                if (Math.abs(tolCalculada) < 1e-10) tolCalculada = 0;
-
-                error = Math.abs(tolCalculada);
-
-                // --- FRENO VISUAL ---
-                if (parseFloat(error.toFixed(4)) === 0) {
-                    error = 0; 
-                }
+            // --- CÁLCULO DE ERROR CORREGIDO (SIN *100 NI %) ---
+            if (math.abs(x3) > 1e-10) { 
+                // Error = |(x3 - x2) / x3| 
+                error = math.abs(math.divide(math.subtract(x3, x2), x3));
             } else {
-                error = 100; // Forzar continuidad en la primera iteración
+                error = 100;
             }
 
-            // Formatear resultados a 4 decimales
-            let x3Str = formatoComplejo(x3);
-            let fx3Str = formatoComplejo(f(x3));
+            // Freno visual para tabla
+            if (parseFloat(error.toFixed(4)) === 0) {
+                error = 0; 
+            }
 
-            // Llenar tabla
+            // Llenar tabla con las 16 columnas
             let fila = `
                 <tr>
                     <td>${iter + 1}</td>
-                    <td style="font-family: monospace; font-weight:bold; color:var(--primary-dark);">${x3Str}</td>
-                    <td style="font-family: monospace;">${fx3Str}</td>
-                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
+                    <td>${formatoComplejo(x0)}</td>
+                    <td>${formatoComplejo(x1)}</td>
+                    <td>${formatoComplejo(x2)}</td>
+                    <td>${formatoComplejo(fx0)}</td>
+                    <td>${formatoComplejo(fx1)}</td>
+                    <td>${formatoComplejo(fx2)}</td>
+                    <td>${formatoComplejo(h0)}</td>
+                    <td>${formatoComplejo(h1)}</td>
+                    <td>${formatoComplejo(d0)}</td>
+                    <td>${formatoComplejo(d1)}</td>
+                    <td>${formatoComplejo(a)}</td>
+                    <td>${formatoComplejo(b)}</td>
+                    <td>${formatoComplejo(c)}</td>
+                    <td style="font-family: monospace; font-weight:bold; color:var(--primary-dark);">${formatoComplejo(x3)}</td>
+                    <td style="color:#D64545;">${error.toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
 
-            // Log de pasos con 4 decimales
+            // Log de pasos detallado mostrando la operación de x3
             pasosLog += `Iteración ${iter + 1}:\n`;
-            pasosLog += `  x0 = ${formatoComplejo(x0)}\n  x1 = ${formatoComplejo(x1)}\n  x2 = ${formatoComplejo(x2)}\n`;
-            pasosLog += `  Calculado x3 = ${x3Str}\n`;
-            
-            if (iter > 0) {
-                pasosLog += `  Tolerancia (|x3 - x2|): ${tolCalculada.toFixed(4)}\n\n`;
-            } else {
-                pasosLog += `\n`;
-            }
+            pasosLog += `  Valores iniciales: x0 = ${formatoComplejo(x0)}, x1 = ${formatoComplejo(x1)}, x2 = ${formatoComplejo(x2)}\n`;
+            pasosLog += `  Coeficientes: a = ${formatoComplejo(a)}, b = ${formatoComplejo(b)}, c = ${formatoComplejo(c)}\n\n`;
+            pasosLog += `  Operación x3:\n`;
+            pasosLog += `  Como el valor de b (${formatoComplejo(b)}) es ${b_re >= 0 ? 'positivo' : 'negativo'}, utilizamos el signo [ ${signStr} ] en el denominador.\n`;
+            pasosLog += `  x3 = x2 + (-2c) / (b ${signStr} sqrt(b² - 4ac))\n`;
+            pasosLog += `  x3 = ${formatoComplejo(x2)} + (-2 * ${formatoComplejo(c)}) / (${formatoComplejo(b)} ${signStr} sqrt(rad))\n`;
+            pasosLog += `  Calculado x3 = ${formatoComplejo(x3)}\n`;
+            pasosLog += `  Error = |(${formatoComplejo(x3)} - ${formatoComplejo(x2)}) / ${formatoComplejo(x3)}| = ${error.toFixed(4)}\n`;
+            pasosLog += `--------------------------------------------------\n\n`;
 
-            // Actualizar puntos (desplazamiento)
+            // Actualizar puntos (desplazamiento) para la siguiente iteración
             x0 = x1;
             x1 = x2;
             x2 = x3;
@@ -189,7 +188,6 @@ function generarGraficaReal(funcStr, centerVal) {
     const ctx = document.getElementById('graficaError').getContext('2d');
     if (chartInstance) chartInstance.destroy();
 
-    // Rango de graficación alrededor del centro
     let range = 5;
     let minX = centerVal - range;
     let maxX = centerVal + range;
@@ -220,7 +218,7 @@ function generarGraficaReal(funcStr, centerVal) {
             datasets: [{
                 label: 'f(x)',
                 data: dataY,
-                borderColor: '#2F6DB3', // Azul Ingeniería
+                borderColor: '#2F6DB3', 
                 borderWidth: 2,
                 pointRadius: 0,
                 fill: false,
@@ -265,7 +263,6 @@ function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Título e Información Básica
     doc.setFontSize(18); doc.setTextColor(31, 58, 95);
     doc.text("Reporte: Método de Müller", 14, 20);
     
@@ -273,35 +270,29 @@ function exportarPDF() {
     doc.text("Función: " + document.getElementById('func').value, 14, 30);
     doc.text("Raíz Aprox: " + document.getElementById('root-result').textContent, 14, 36);
     
-    // Generar Tabla
     doc.autoTable({ 
         html: '#tabla-resultados', 
         startY: 45,
         theme: 'grid',
         headStyles: { fillColor: [31, 58, 95] },
-        styles: { fontSize: 9, cellPadding: 2 }
+        styles: { fontSize: 6, cellPadding: 1, overflow: 'linebreak' }
     });
 
-    // Agregar Gráfica con Título
     const canvas = document.getElementById('graficaError');
     if(canvas) {
         const imgData = canvas.toDataURL('image/png');
         
-        // Calcular posición Y después de la tabla
         let finalY = doc.lastAutoTable.finalY + 15; 
 
-        // Si no cabe, añadir página
         if (finalY + 90 > doc.internal.pageSize.height) { 
             doc.addPage(); 
             finalY = 20; 
         }
         
-        // Título de la Gráfica
         doc.setFontSize(14);
         doc.setTextColor(31, 58, 95);
         doc.text("Gráfica de la Función", 14, finalY);
 
-        // Imagen
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
     }
     
