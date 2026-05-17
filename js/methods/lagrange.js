@@ -3,7 +3,7 @@
 
 let chartInstance = null;
 
-// 1. Generar campos de entrada (Reutilizable)
+// 1. Generar campos de entrada de forma HORIZONTAL
 function generarInputsPuntos() {
     const n = parseInt(document.getElementById('cantidadPuntos').value);
     const container = document.getElementById('puntos-container');
@@ -13,24 +13,34 @@ function generarInputsPuntos() {
         return;
     }
 
-    let html = '<table style="margin: 0 auto; width: 80%; max-width: 600px;">';
-    html += '<thead><tr><th>i</th><th>x</th><th>f(x)</th></tr></thead><tbody>';
-
+    // Tabla con ancho responsivo
+    let html = '<div style="overflow-x: auto;"><table style="margin: 0 auto; width: 100%; max-width: 800px; text-align: center; border-collapse: collapse;">';
+    
+    // FILA 1: Valores de X
+    html += '<tr>';
+    html += '<td style="font-weight:bold; color: var(--primary-dark); background: #eef2f5; width: 60px; padding: 10px; border: 1px solid var(--border);">X</td>';
     for (let i = 0; i < n; i++) {
-        html += `<tr>
-                    <td style="font-weight:bold; text-align:center;">${i}</td>
-                    <td><input type="number" id="x_${i}" class="matrix-input" placeholder="x${i}" style="width: 100%; text-align:center;"></td>
-                    <td><input type="number" id="y_${i}" class="matrix-input" placeholder="y${i}" style="width: 100%; text-align:center;"></td>
-                 </tr>`;
+        html += `<td style="padding: 5px; border: 1px solid var(--border);"><input type="number" id="x_${i}" class="matrix-input" placeholder="x${i}" style="width: 100%; min-width: 60px; text-align:center; padding: 5px;"></td>`;
     }
-    html += '</tbody></table>';
+    html += '</tr>';
+
+    // FILA 2: Valores de Y / f(x)
+    html += '<tr>';
+    html += '<td style="font-weight:bold; color: var(--primary-dark); background: #eef2f5; width: 60px; padding: 10px; border: 1px solid var(--border);">Y</td>';
+    for (let i = 0; i < n; i++) {
+        html += `<td style="padding: 5px; border: 1px solid var(--border);"><input type="number" id="y_${i}" class="matrix-input" placeholder="y${i}" style="width: 100%; min-width: 60px; text-align:center; padding: 5px;"></td>`;
+    }
+    html += '</tr>';
+
+    html += '</table></div>';
     container.innerHTML = html;
 }
 
-// 2. Función Principal: Calcular Lagrange
+// 2. Función Principal: Calcular Lagrange al estilo "Cuaderno"
 function calcularLagrange() {
     const n = parseInt(document.getElementById('cantidadPuntos').value);
-    const valX = parseFloat(document.getElementById('valX').value);
+    const valXStr = document.getElementById('valX').value;
+    const valX = parseFloat(valXStr);
     
     const divPolinomio = document.getElementById('resultado-polinomio');
     const divEvaluacion = document.getElementById('resultado-evaluacion');
@@ -42,7 +52,7 @@ function calcularLagrange() {
     msgError.textContent = '';
     divPasos.textContent = '';
 
-    // Obtener datos
+    // Obtener datos de la tabla horizontal
     let x = [];
     let y = [];
     try {
@@ -54,83 +64,117 @@ function calcularLagrange() {
             y.push(parseFloat(val_y));
         }
         if (new Set(x).size !== x.length) {
-            msgError.textContent = "Error: Los valores de X deben ser distintos.";
+            msgError.textContent = "Error: Los valores de X deben ser distintos para evitar división por cero.";
             return;
         }
     } catch (e) {
-        msgError.textContent = "Error: Por favor ingresa todos los puntos.";
+        msgError.textContent = "Error: Por favor ingresa todos los puntos de la tabla.";
         return;
     }
 
-    // --- ALGORITMO LAGRANGE ---
-    let pasosLog = "--- CONSTRUCCIÓN DE TÉRMINOS L_i(x) ---\n\n";
-    let polinomioStr = ""; 
+    let evaluar = valXStr !== '' && !isNaN(valX);
 
-    let evaluar = !isNaN(valX);
-    let resultadoFinal = 0;
-
+    // --- ALGORITMO Y PASO A PASO LAGRANGE ---
+    let pasosLog = "--- 1. FÓRMULA GENERAL DE LAGRANGE ---\n";
+    
+    // Construir fórmula simbólica general
+    let formulaGeneral = "f(x) = ";
     for (let i = 0; i < n; i++) {
-        pasosLog += `>>> Término L_${i}(x) para punto (${x[i]}, ${y[i]}):\n`;
-        
-        let numeradorStr = "";
-        let denominadorVal = 1;
-        let terminoVal = 1; 
-        
+        let numVars = "";
+        let denVars = "";
         for (let j = 0; j < n; j++) {
             if (i !== j) {
-                // Formateo matemático para (x - xj)
-                let xj = x[j];
-                if (xj === 0) {
-                    numeradorStr += `(x)`;
-                } else {
-                    let sign = xj < 0 ? "+" : "-";
-                    numeradorStr += `(x ${sign} ${Math.abs(xj)})`;
-                }
-
-                denominadorVal *= (x[i] - x[j]);
-                
-                if (evaluar) {
-                    terminoVal *= (valX - x[j]) / (x[i] - x[j]);
-                }
+                numVars += `(x - x${j})`;
+                denVars += `(x${i} - x${j})`;
             }
         }
-        
-        // Limpiar -0.0000
-        let denClean = Math.abs(denominadorVal) < 1e-10 ? 0 : denominadorVal;
+        formulaGeneral += `[ ${numVars} / ${denVars} ] * f(x${i})`;
+        if (i < n - 1) formulaGeneral += "\n       + ";
+    }
+    pasosLog += formulaGeneral + "\n\n";
 
-        pasosLog += `   Numerador:   ${numeradorStr}\n`;
-        pasosLog += `   Denominador: ${denClean.toFixed(4)}\n`;
-        
-        // Construimos el string visual
-        let signo = y[i] >= 0 ? (i===0 ? "" : " + ") : " - ";
-        polinomioStr += `${signo}${Math.abs(y[i]).toFixed(4)} * [ ${numeradorStr} / ${denClean.toFixed(4)} ]`;
+    pasosLog += "--- 2. DATOS IDENTIFICADOS ---\n";
+    for (let i = 0; i < n; i++) {
+        pasosLog += `x${i} = ${x[i]} \t\t f(x${i}) = ${y[i]}\n`;
+    }
+    if (evaluar) pasosLog += `x  = ${valX}\n`;
+    pasosLog += "\n";
 
+    let polinomioStr = ""; 
+    let resultadoFinal = 0;
+
+    let eqSustitucion = evaluar ? `f(${valX}) = ` : `f(x) = `;
+    let eqCalculoFracciones = evaluar ? `f(${valX}) = ` : `f(x) = `;
+    let eqDivision = evaluar ? `f(${valX}) = ` : `f(x) = `;
+    let eqMultiplicacion = evaluar ? `f(${valX}) = ` : `f(x) = `;
+
+    for (let i = 0; i < n; i++) {
+        let numSustituido = "";
+        let denSustituido = "";
+        let numVal = 1;
+        let denVal = 1;
+        let numPoli = "";
+
+        for (let j = 0; j < n; j++) {
+            if (i !== j) {
+                // Para el polinomio en pantalla
+                let sign = x[j] < 0 ? "+" : "-";
+                numPoli += `(x ${sign} ${Math.abs(x[j])})`;
+                
+                // Para el paso a paso
+                let valXStrDisplay = evaluar ? valX : "x";
+                numSustituido += `(${valXStrDisplay} - ${x[j]})`;
+                denSustituido += `(${x[i]} - ${x[j]})`;
+                
+                if (evaluar) {
+                    numVal *= (valX - x[j]);
+                }
+                denVal *= (x[i] - x[j]);
+            }
+        }
+
+        let Li_x = evaluar ? (numVal / denVal) : null;
+        let terminoEval = evaluar ? (Li_x * y[i]) : null;
+        if (evaluar) resultadoFinal += terminoEval;
+
+        let signoSuma = (i > 0) ? " \n       + " : "";
+        let signoPoli = y[i] >= 0 ? (i === 0 ? "" : " + ") : " - ";
+        
+        polinomioStr += `${signoPoli}${Math.abs(y[i]).toFixed(4)} * [ ${numPoli} / ${denVal.toFixed(4)} ]`;
+
+        eqSustitucion += `${signoSuma}[ ${numSustituido} / ${denSustituido} ] * (${y[i]})`;
+        
         if (evaluar) {
-            let aporte = y[i] * terminoVal;
-            resultadoFinal += aporte;
-            
-            let termClean = Math.abs(terminoVal) < 1e-10 ? 0 : terminoVal;
-            let aporteClean = Math.abs(aporte) < 1e-10 ? 0 : aporte;
-            
-            pasosLog += `   Evaluación:  L_${i}(${valX}) = ${termClean.toFixed(4)}\n`;
-            pasosLog += `   Aporte:      ${y[i]} * ${termClean.toFixed(4)} = ${aporteClean.toFixed(4)}\n\n`;
-        } else {
-            pasosLog += "\n";
+            eqCalculoFracciones += `${signoSuma}[ ${numVal.toFixed(4)} / ${denVal.toFixed(4)} ] * (${y[i]})`;
+            eqDivision += `${signoSuma}[ ${Li_x.toFixed(4)} ] * (${y[i]})`;
+            eqMultiplicacion += `${(i > 0) ? " + " : ""}${terminoEval.toFixed(4)}`;
         }
     }
 
-    // Mostramos el polinomio en el HTML
+    pasosLog += "--- 3. SUSTITUCIÓN DE VALORES ---\n";
+    pasosLog += eqSustitucion + "\n\n";
+
+    if (evaluar) {
+        pasosLog += "--- 4. RESOLVIENDO OPERACIONES ---\n";
+        pasosLog += eqCalculoFracciones + "\n";
+        pasosLog += eqDivision + "\n";
+        pasosLog += `f(${valX}) = ${eqMultiplicacion}\n`;
+        // AQUÍ EL RESULTADO FINAL CON 4 DECIMALES
+        pasosLog += `f(${valX}) = ${resultadoFinal.toFixed(4)}\n`;
+    }
+
     divPolinomio.textContent = "P(x) = " + polinomioStr;
 
     if (evaluar) {
-        let resClean = Math.abs(resultadoFinal) < 1e-10 ? 0 : resultadoFinal;
-        divEvaluacion.innerHTML = `Evaluación: f(${valX}) ≈ ${resClean.toFixed(4)}`;
-        pasosLog += `--- RESULTADO FINAL ---\nP(${valX}) ≈ ${resClean.toFixed(4)}`;
+        // AQUÍ LA EVALUACIÓN CON 4 DECIMALES
+        divEvaluacion.innerHTML = `Resultado Final: f(${valX}) ≈ ${resultadoFinal.toFixed(4)}`;
+    } else {
+        divEvaluacion.innerHTML = "Ingresa un valor en X para evaluar el polinomio.";
     }
 
     divPasos.textContent = pasosLog;
 
-    generarGraficaLagrange(x, y);
+    generarGraficaLagrange(x, y, n, valX, resultadoFinal, evaluar);
 }
 
 // Función evaluación para gráfica
@@ -150,14 +194,19 @@ function evaluarLagrangeEn(z, xData, yData) {
     return suma;
 }
 
-function generarGraficaLagrange(xData, yData) {
+function generarGraficaLagrange(xData, yData, n, xInterp, yInterp, evaluar) {
     const ctx = document.getElementById('graficaInterpolacion').getContext('2d');
     if (chartInstance) chartInstance.destroy();
 
     let minX = Math.min(...xData);
     let maxX = Math.max(...xData);
+    if (evaluar) {
+        minX = Math.min(minX, xInterp);
+        maxX = Math.max(maxX, xInterp);
+    }
     let padding = (maxX - minX) * 0.1;
-    
+    if (padding === 0) padding = 1;
+
     let curveX = [];
     let curveY = [];
     let steps = 100;
@@ -165,41 +214,56 @@ function generarGraficaLagrange(xData, yData) {
 
     for (let i = 0; i <= steps; i++) {
         let val = (minX - padding) + i * stepSize;
-        curveX.push(val.toFixed(2));
+        curveX.push(val.toFixed(2)); // La escala X se queda con 2 decimales para que no se amontonen los números
         curveY.push(evaluarLagrangeEn(val, xData, yData));
     }
 
     const originalPoints = xData.map((x, i) => ({x: x, y: yData[i]}));
+    
+    let datasetsArr = [
+        {
+            label: 'Polinomio de Lagrange',
+            data: curveY,
+            borderColor: '#2F6DB3', 
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.4
+        },
+        {
+            label: 'Puntos de la Tabla',
+            data: originalPoints,
+            type: 'scatter',
+            backgroundColor: '#1F3A5F',
+            pointRadius: 6,
+            pointHoverRadius: 8
+        }
+    ];
+
+    if (evaluar) {
+        datasetsArr.push({
+            // LA LEYENDA DE LA GRÁFICA TAMBIÉN CON 4 DECIMALES
+            label: `Resultado: f(${xInterp}) = ${yInterp.toFixed(4)}`,
+            data: [{x: xInterp, y: yInterp}],
+            type: 'scatter',
+            backgroundColor: '#D64545',
+            pointRadius: 8,
+            pointStyle: 'rectRot'
+        });
+    }
 
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
             labels: curveX,
-            datasets: [
-                {
-                    label: 'Polinomio de Lagrange',
-                    data: curveY,
-                    borderColor: '#2F6DB3', 
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    fill: false,
-                    tension: 0.4
-                },
-                {
-                    label: 'Puntos Dados',
-                    data: originalPoints,
-                    type: 'scatter',
-                    backgroundColor: '#D64545',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }
-            ]
+            datasets: datasetsArr
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                x: { type: 'linear', position: 'bottom', title: {display:true, text:'X'} }
+                x: { type: 'linear', position: 'bottom', title: {display:true, text:'X'} },
+                y: { title: {display:true, text:'f(X)'} }
             }
         }
     });
@@ -207,52 +271,43 @@ function generarGraficaLagrange(xData, yData) {
 
 function borrarDatos() {
     generarInputsPuntos();
+    document.getElementById('valX').value = '';
     document.getElementById('resultado-polinomio').textContent = '';
     document.getElementById('resultado-evaluacion').textContent = '';
+    document.getElementById('error-msg').textContent = '';
     document.getElementById('paso-a-paso').textContent = '';
-    document.getElementById('valX').value = '';
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
 }
 
-// --- FUNCIÓN PDF ---
 function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Título Principal
-    doc.setFontSize(18); 
-    doc.setTextColor(31, 58, 95);
+    doc.setFontSize(18); doc.setTextColor(31, 58, 95);
     doc.text("Interpolación: Método de Lagrange", 14, 20);
     
-    // 1. Polinomio Resultante
-    doc.setFontSize(12); 
-    doc.setTextColor(0);
+    doc.setFontSize(12); doc.setTextColor(0);
     doc.text("Polinomio Resultante:", 14, 35);
     
     doc.setFontSize(10);
     let poly = document.getElementById('resultado-polinomio').textContent;
-    // Dividimos el texto para que no se salga de la hoja
     let splitPoly = doc.splitTextToSize(poly, 180); 
     doc.text(splitPoly, 14, 42);
     
-    // Calculamos dónde terminó el polinomio para poner el resultado abajo
     let lastY = 42 + (splitPoly.length * 5);
     
-    // 2. Resultado de Evaluación (si existe)
     let evalText = document.getElementById('resultado-evaluacion').textContent;
     if (evalText) {
         doc.setFontSize(12);
-        doc.setTextColor(47, 163, 107); // Verde éxito
+        doc.setTextColor(47, 163, 107);
         doc.text(evalText, 14, lastY + 10);
-        lastY += 20; // Espacio extra
+        lastY += 20;
     } else {
         lastY += 10;
     }
 
-    // 3. Gráfica del Polinomio
     const canvas = document.getElementById('graficaInterpolacion');
     if(canvas){
-        // Verificar si cabe en la hoja, si no, nueva página
         if (lastY + 90 > doc.internal.pageSize.height) {
             doc.addPage();
             lastY = 20;
