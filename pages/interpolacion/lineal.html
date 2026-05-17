@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interpolación de Lagrange - Métodos Numéricos</title>
+    <title>Interpolación Lineal - Métodos Numéricos</title>
     
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -15,7 +15,7 @@
 </head>
 <body>
     
- <aside id="sidebar">
+<aside id="sidebar">
     <div class="sidebar-header">
         <h2>Métodos Numéricos</h2>
         <button id="menu-toggle" aria-label="Abrir menú">
@@ -71,8 +71,8 @@
                 <i class="fas fa-chevron-down arrow"></i>
             </button>
             <div class="dropdown-content show">
-                <a href="lineal.html" class="sub-link">Lineal</a>
-                <a href="lagrange.html" class="sub-link active">Lagrange</a>
+                <a href="lineal.html" class="sub-link active">Lineal</a>
+                <a href="lagrange.html" class="sub-link">Lagrange</a>
             </div>
         </div>
         
@@ -91,46 +91,54 @@
 
     <main id="main-content">
         <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1>Interpolación de Lagrange</h1>
+            <h1>Interpolación Lineal</h1>
             <button onclick="exportarPDF()">📄 Guardar Reporte PDF</button>
         </header>
 
         <section class="card">
-            <h3>Datos de los Puntos</h3>
-            <div class="input-group" style="align-items: flex-end;">
-                <div class="form-control">
-                    <label for="cantidadPuntos">Número de Puntos (n):</label>
-                    <input type="number" id="cantidadPuntos" value="3" min="2" max="10">
+            <h3>Datos de Entrada</h3>
+            <div class="input-group" style="display: flex; flex-wrap: wrap; gap: 20px;">
+                <div class="form-control" style="flex: 1; min-width: 200px;">
+                    <label style="font-weight: bold; color: var(--primary-dark);">Punto 1 (x₁, y₁):</label>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <input type="number" id="x1" placeholder="x₁" step="any" style="width: 100%;">
+                        <input type="number" id="y1" placeholder="y₁" step="any" style="width: 100%;">
+                    </div>
                 </div>
-                <div class="form-control">
-                    <button class="btn-calculate" onclick="generarInputsPuntos()" style="padding: 10px;">
-                        <i class="fas fa-list-ol"></i> Generar Tabla
-                    </button>
-                </div>
-            </div>
-
-            <div id="puntos-container" style="margin-top: 20px; overflow-x: auto;"></div>
-            
-            <div class="input-group" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
-                <div class="form-control">
-                    <label for="valX">Evaluar en X = ? (Opcional):</label>
-                    <input type="number" id="valX" placeholder="Ej: 2.5" step="any">
+                <div class="form-control" style="flex: 1; min-width: 200px;">
+                    <label style="font-weight: bold; color: var(--primary-dark);">Punto 2 (x₂, y₂):</label>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <input type="number" id="x2" placeholder="x₂" step="any" style="width: 100%;">
+                        <input type="number" id="y2" placeholder="y₂" step="any" style="width: 100%;">
+                    </div>
                 </div>
             </div>
 
-            <div class="action-buttons">
-                <button class="btn-calculate" onclick="calcularLagrange()">Calcular Polinomio</button>
-                <button class="btn-clear" onclick="borrarDatos()">Borrar Todo</button>
+            <div class="input-group" style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
+                <div class="form-control" style="flex: 1; min-width: 200px;">
+                    <label for="valX">Valor a interpolar (x):</label>
+                    <input type="number" id="valX" placeholder="Ej: 2" step="any">
+                </div>
+                <div class="form-control" style="flex: 1; min-width: 200px;">
+                    <label for="valVerdadero">Valor Verdadero (Opcional, para error %):</label>
+                    <input type="number" id="valVerdadero" placeholder="Ej: 0.69314718" step="any">
+                </div>
+            </div>
+
+            <div class="action-buttons" style="margin-top: 20px;">
+                <button class="btn-calculate" onclick="calcularInterpolacion()"><i class="fas fa-calculator"></i> Calcular Interpolación</button>
+                <button class="btn-clear" onclick="borrarDatos()"><i class="fas fa-trash"></i> Borrar Todo</button>
             </div>
             
-            <p id="error-msg"></p>
+            <p id="error-msg" style="color: #D64545; font-weight: bold; margin-top: 10px;"></p>
         </section>
 
         <section class="card" style="margin-top: 20px;">
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <h3>Polinomio Resultante</h3>
-                <div id="resultado-polinomio" style="font-family: 'Consolas', monospace; color: var(--primary-dark); font-weight: bold; font-size: 1.1em; background: rgba(47, 109, 179, 0.05); padding: 15px; border-radius: 6px; overflow-x: auto; white-space: nowrap; line-height: 1.8;"></div>
-                <div id="resultado-evaluacion" style="color: var(--action-success); font-weight: bold; font-size: 1.1em; margin-top: 10px;"></div>
+                <h3>Resultado</h3>
+                <div id="resultado-funcion" style="font-family: 'Consolas', monospace; color: var(--primary-dark); font-weight: bold; font-size: 1.1em; background: rgba(47, 109, 179, 0.05); padding: 10px; border-radius: 6px;"></div>
+                <div id="resultado-evaluacion" style="color: var(--action-success); font-weight: bold; font-size: 1.1em;"></div>
+                <div id="resultado-error" style="color: #D64545; font-weight: bold; font-size: 1.1em;"></div>
             </div>
         </section>
 
@@ -141,7 +149,7 @@
             </section>
 
             <section class="card" style="margin-bottom: 0;">
-                <h3>Gráfica del Polinomio</h3>
+                <h3>Gráfica de Interpolación</h3>
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="graficaInterpolacion"></canvas>
                 </div>
@@ -151,12 +159,6 @@
     </main>
 
     <script src="../../js/main.js"></script>
-    <script src="../../js/methods/lagrange.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            generarInputsPuntos(); // Inicializar
-        });
-    </script>
+    <script src="../../js/methods/lineal.js"></script>
 </body>
 </html>
