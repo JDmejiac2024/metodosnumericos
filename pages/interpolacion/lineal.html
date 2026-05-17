@@ -11,16 +11,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     
 <aside id="sidebar">
     <div class="sidebar-header">
         <h2>Métodos Numéricos</h2>
-        <button id="menu-toggle" aria-label="Abrir menú">
-            <i class="fas fa-bars"></i>
-        </button>
+        <button id="menu-toggle" aria-label="Abrir menú"><i class="fas fa-bars"></i></button>
     </div>
     <nav>
         <a href="../../index.html"><i class="fas fa-home"></i> Inicio</a>
@@ -45,23 +42,6 @@
                 <a href="../abiertos/newton.html" class="sub-link">Newton-Raphson</a>
                 <a href="../abiertos/secante.html" class="sub-link">Secante</a>
                 <a href="../abiertos/puntofijo.html" class="sub-link">Punto Fijo</a>
-                <a href="../abiertos/raices_multiples.html" class="sub-link">Raíces Múltiples</a>
-                <a href="../abiertos/secante_modificado.html" class="sub-link">Secante Modificado</a>
-                <a href="../abiertos/steffensen.html" class="sub-link">Steffensen</a>
-            </div>
-        </div>
-        
-        <div class="nav-dropdown">
-            <button class="dropdown-btn">
-                <span><i class="fas fa-equals"></i> Sistemas Ec.</span>
-                <i class="fas fa-chevron-down arrow"></i>
-            </button>
-            <div class="dropdown-content">
-                <a href="../sistemas/jacobi.html" class="sub-link">Jacobi</a>
-                <a href="../sistemas/gauss_seidel.html" class="sub-link">Gauss-Seidel</a>
-                <a href="../sistemas/eliminacion_gaussiana.html" class="sub-link">Eliminación Gaussiana</a>
-                <a href="../sistemas/gauss_jordan.html" class="sub-link">Gauss-Jordan</a>
-                <a href="../sistemas/factorizacion_lu.html" class="sub-link">Factorización LU</a>
             </div>
         </div>
 
@@ -75,17 +55,6 @@
                 <a href="lagrange.html" class="sub-link">Lagrange</a>
             </div>
         </div>
-        
-        <div class="nav-dropdown">
-            <button class="dropdown-btn">
-                <span><i class="fas fa-square-root-alt"></i> Raíces Polinomios</span>
-                <i class="fas fa-chevron-down arrow"></i>
-            </button>
-            <div class="dropdown-content">
-                <a href="../raices/muller.html" class="sub-link">Método de Müller</a>
-                <a href="../raices/bairstow.html" class="sub-link">Método de Bairstow</a>
-            </div>
-        </div>
     </nav>
 </aside>
 
@@ -96,32 +65,29 @@
         </header>
 
         <section class="card">
-            <h3>Datos de Entrada</h3>
-            <div class="input-group" style="display: flex; flex-wrap: wrap; gap: 20px;">
-                <div class="form-control" style="flex: 1; min-width: 200px;">
-                    <label style="font-weight: bold; color: var(--primary-dark);">Punto 1 (x₁, y₁):</label>
-                    <div style="display: flex; gap: 10px; margin-top: 5px;">
-                        <input type="number" id="x1" placeholder="x₁" step="any" style="width: 100%;">
-                        <input type="number" id="y1" placeholder="y₁" step="any" style="width: 100%;">
-                    </div>
+            <h3>Datos de la Tabla</h3>
+            <div class="input-group" style="align-items: flex-end;">
+                <div class="form-control">
+                    <label for="cantidadPuntos">Cantidad de Datos a ingresar:</label>
+                    <input type="number" id="cantidadPuntos" value="5" min="2" max="15">
                 </div>
-                <div class="form-control" style="flex: 1; min-width: 200px;">
-                    <label style="font-weight: bold; color: var(--primary-dark);">Punto 2 (x₂, y₂):</label>
-                    <div style="display: flex; gap: 10px; margin-top: 5px;">
-                        <input type="number" id="x2" placeholder="x₂" step="any" style="width: 100%;">
-                        <input type="number" id="y2" placeholder="y₂" step="any" style="width: 100%;">
-                    </div>
+                <div class="form-control">
+                    <button class="btn-calculate" onclick="generarInputsPuntos()" style="padding: 10px;">
+                        <i class="fas fa-list-ol"></i> Generar Tabla
+                    </button>
                 </div>
             </div>
+
+            <div id="puntos-container" style="margin-top: 20px; overflow-x: auto;"></div>
 
             <div class="input-group" style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
                 <div class="form-control" style="flex: 1; min-width: 200px;">
                     <label for="valX">Valor a interpolar (x):</label>
-                    <input type="number" id="valX" placeholder="Ej: 2" step="any">
+                    <input type="number" id="valX" placeholder="Ej: 18" step="any">
                 </div>
                 <div class="form-control" style="flex: 1; min-width: 200px;">
-                    <label for="valVerdadero">Valor Verdadero (Opcional, para error %):</label>
-                    <input type="number" id="valVerdadero" placeholder="Ej: 0.69314718" step="any">
+                    <label for="valVerdadero">Valor Verdadero (Para calcular Error %):</label>
+                    <input type="number" id="valVerdadero" placeholder="Opcional" step="any">
                 </div>
             </div>
 
@@ -160,5 +126,8 @@
 
     <script src="../../js/main.js"></script>
     <script src="../../js/methods/lineal.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => { generarInputsPuntos(); });
+    </script>
 </body>
 </html>
