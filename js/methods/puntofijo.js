@@ -5,8 +5,8 @@ let chartInstance = null;
 
 function calcularPuntoFijo() {
     // 1. Obtener inputs
-    const funcStr = document.getElementById('func').value; // Opcional
-    const gxStr = document.getElementById('gx').value;     // Obligatorio
+    const funcStr = document.getElementById('func').value; // f(x) original
+    let gxStr = document.getElementById('gx').value;     // g(x) despejada
     const x0Input = document.getElementById('x0').value;
     const tolInput = document.getElementById('tol').value;
     const maxIterInput = document.getElementById('maxIter').value;
@@ -23,10 +23,24 @@ function calcularPuntoFijo() {
     pasoDiv.textContent = '';
     rootResult.textContent = '';
 
-    // Validar vacíos (g(x) y x0 son obligatorios)
-    if (!gxStr || !x0Input) {
-        msgError.textContent = "Error: Debes ingresar la función despejada g(x) y el valor inicial.";
+    // Validaciones iniciales
+    if (!x0Input) {
+        msgError.textContent = "Error: Debes ingresar el valor inicial x0.";
         return;
+    }
+
+    if (!funcStr && !gxStr) {
+        msgError.textContent = "Error: Debes ingresar f(x) o al menos la función despejada g(x).";
+        return;
+    }
+
+    // --- GENERACIÓN AUTOMÁTICA DEL DESPEJE g(x) ---
+    // Si el usuario ingresó f(x) pero dejó g(x) vacío, creamos un g(x) automático sumando "x"
+    let despejeAutomatico = false;
+    if (funcStr && !gxStr) {
+        gxStr = `(${funcStr}) + x`;
+        document.getElementById('gx').value = gxStr; // Mostrarlo en la interfaz
+        despejeAutomatico = true;
     }
 
     let xi = parseFloat(x0Input);
@@ -43,7 +57,7 @@ function calcularPuntoFijo() {
         // Compilar funciones
         const g = (x) => math.evaluate(gxStr, { x: x });
         
-        // Si el usuario ingresó f(x), la usamos para verificar, si no, devolvemos null
+        // Si el usuario ingresó f(x), la usamos para verificar
         const f = funcStr ? (x) => math.evaluate(funcStr, { x: x }) : null;
 
         let error = 100;
@@ -51,8 +65,14 @@ function calcularPuntoFijo() {
         let xi_new = 0;
         
         let labels = [];
-        let dataError = [];
+        // CAMBIO: Array para almacenar la raíz iterada
+        let dataRaiz = [];
         let pasosLog = "";
+
+        if (despejeAutomatico) {
+            pasosLog += "--- DESPEJE AUTOMÁTICO APLICADO ---\n";
+            pasosLog += "Como g(x) estaba vacío, se utilizó el método de despeje por suma: g(x) = f(x) + x\n\n";
+        }
 
         // --- BUCLE PUNTO FIJO ---
         while (error > tol && iter < maxIter) {
@@ -60,9 +80,9 @@ function calcularPuntoFijo() {
             // Evaluar la iteración: x_{i+1} = g(x_i)
             xi_new = g(xi);
 
-            // Validar divergencia extrema
+            // Validar divergencia extrema (el método explota)
             if (Math.abs(xi_new) > 1e12 || isNaN(xi_new)) {
-                msgError.textContent = "Error: El método diverge (el valor tiende a infinito o no existe). Intenta con otro despeje g(x).";
+                msgError.textContent = "Error: El método diverge (el valor tiende a infinito o no existe). Intenta con otro despeje g(x) o un punto inicial diferente.";
                 pasosLog += `\nCRITICAL: Divergencia detectada en iteración ${iter+1}. Valor demasiado grande o indefinido.`;
                 pasoDiv.textContent = pasosLog;
                 return;
@@ -99,7 +119,7 @@ function calcularPuntoFijo() {
                     <td>${xi.toFixed(4)}</td>
                     <td>${xi_new.toFixed(4)}</td>
                     <td style="font-weight:bold; color:#2C3E50">${xi_new.toFixed(4)}</td>
-                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
+                    <td>${iter === 0 ? '-' : Math.abs(tolCalculada).toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -111,7 +131,7 @@ function calcularPuntoFijo() {
             pasosLog += `  x_{i+1} = ${xi_new.toFixed(4)}\n`;
             
             if (iter > 0) {
-                pasosLog += `  Tolerancia (x_i - x_{i+1}): ${xi.toFixed(4)} - ${xi_new.toFixed(4)} = ${tolCalculada.toFixed(4)}\n\n`;
+                pasosLog += `  Tolerancia |x_i - x_{i+1}|: |${xi.toFixed(4)} - ${xi_new.toFixed(4)}| = ${Math.abs(tolCalculada).toFixed(4)}\n\n`;
             } else {
                 pasosLog += `\n`;
             }
@@ -119,10 +139,9 @@ function calcularPuntoFijo() {
             // Actualizar
             xi = xi_new;
             
-            // Datos Gráfica
+            // CAMBIO: Datos Gráfica (almacenando xi_new)
             labels.push(iter + 1);
-            if(iter > 0) dataError.push(Math.abs(tolCalculada));
-            else dataError.push(null);
+            dataRaiz.push(parseFloat(xi_new.toFixed(4)));
 
             iter++;
         }
@@ -135,10 +154,10 @@ function calcularPuntoFijo() {
             pasoDiv.textContent += `\nVerificación en f(x):\n  f(${xi.toFixed(4)}) = ${f(xi).toFixed(4)}`;
         }
         
-        generarGrafica(labels, dataError);
+        generarGrafica(labels, dataRaiz);
 
     } catch (e) {
-        msgError.textContent = "Error matemático: Revisa la sintaxis de g(x).";
+        msgError.textContent = "Error matemático: Revisa la sintaxis de g(x) o f(x).";
         console.error(e);
     }
 }
@@ -166,10 +185,11 @@ function generarGrafica(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Tolerancia Absoluta',
+                // CAMBIO: Etiquetas y colores
+                label: 'Aproximación de la Raíz (x_i+1)',
                 data: data,
-                borderColor: '#D64545', // Color para Punto Fijo
-                backgroundColor: 'rgba(214, 69, 69, 0.1)',
+                borderColor: '#2F6DB3', // Azul estándar de raíz
+                backgroundColor: 'rgba(47, 109, 179, 0.1)',
                 fill: true,
                 borderWidth: 2,
                 pointRadius: 4,
@@ -180,7 +200,8 @@ function generarGrafica(labels, data) {
             responsive: true, 
             maintainAspectRatio: false,
             scales: { 
-                y: { beginAtZero: true, title: { display: true, text: 'Tolerancia' } },
+                // CAMBIO: Título eje Y
+                y: { beginAtZero: false, title: { display: true, text: 'Valor de la Raíz' } },
                 x: { title: { display: true, text: 'Iteración' } }
             } 
         }
@@ -224,7 +245,8 @@ function exportarPDF() {
         
         doc.setFontSize(14);
         doc.setTextColor(31, 58, 95);
-        doc.text("Gráfica de Convergencia", 14, finalY);
+        // CAMBIO: Título de PDF
+        doc.text("Gráfica de Aproximación de la Raíz", 14, finalY);
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     doc.save("PuntoFijo_Reporte.pdf");

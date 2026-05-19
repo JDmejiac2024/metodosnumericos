@@ -65,6 +65,10 @@ function calcularMuller() {
         let iter = 0;
         let error = 100;
         let x3 = math.complex(0, 0);
+        
+        // CAMBIO: Arreglos para la gráfica de iteraciones
+        let labels = [];
+        let dataRaiz = [];
         let pasosLog = "--- INICIO MÉTODO DE MÜLLER ---\n\n";
         
         // --- BUCLE MÜLLER ---
@@ -162,6 +166,11 @@ function calcularMuller() {
             x1 = x2;
             x2 = x3;
 
+            // CAMBIO: Guardar el valor real de x3 para la gráfica
+            let x3_re = (typeof x3 === 'number') ? x3 : x3.re;
+            labels.push(iter + 1);
+            dataRaiz.push(parseFloat(x3_re.toFixed(4)));
+
             iter++;
         }
 
@@ -169,79 +178,13 @@ function calcularMuller() {
         pasoDiv.textContent = pasosLog;
         rootResult.textContent = `Raíz: ${formatoComplejo(x3)}`;
 
-        // Graficar (Solo si la raíz final tiene parte imaginaria pequeña o nula)
-        if (Math.abs(x3.im) < 1e-5) {
-            generarGraficaReal(funcStr, x3.re);
-        } else {
-            msgError.textContent = "Nota: La raíz es compleja. La gráfica mostrará la función solo en el eje real cerca de x2.";
-            generarGraficaReal(funcStr, x2Val); 
-        }
+        // CAMBIO: Generar la misma gráfica de convergencia que los demás métodos
+        generarGrafica(labels, dataRaiz);
 
     } catch (e) {
         msgError.textContent = "Error matemático: Revisa la sintaxis de la función.";
         console.error(e);
     }
-}
-
-// Función para graficar (invariable)
-function generarGraficaReal(funcStr, centerVal) {
-    const ctx = document.getElementById('graficaError').getContext('2d');
-    if (chartInstance) chartInstance.destroy();
-
-    let range = 5;
-    let minX = centerVal - range;
-    let maxX = centerVal + range;
-    let steps = 100;
-    let stepSize = (maxX - minX) / steps;
-
-    let labels = [];
-    let dataY = [];
-
-    const f = (x) => {
-        try { return math.evaluate(funcStr, {x: x}); } 
-        catch { return null; }
-    };
-
-    for (let i = 0; i <= steps; i++) {
-        let x = minX + i * stepSize;
-        let y = f(x);
-        if (y !== null && !isNaN(y) && typeof y === 'number') {
-            labels.push(x.toFixed(2));
-            dataY.push(y);
-        }
-    }
-
-    chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'f(x)',
-                data: dataY,
-                borderColor: '#2F6DB3', 
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false,
-                tension: 0.4
-            },
-            {
-                label: 'Eje X',
-                data: new Array(labels.length).fill(0),
-                borderColor: '#000',
-                borderWidth: 1,
-                pointRadius: 0,
-                borderDash: [5, 5]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { 
-                x: { display: true }, 
-                y: { beginAtZero: false } 
-            }
-        }
-    });
 }
 
 function borrarDatos() {
@@ -256,6 +199,37 @@ function borrarDatos() {
     document.getElementById('paso-a-paso').textContent = '';
     document.getElementById('error-msg').textContent = '';
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+}
+
+// CAMBIO: Función gráfica estandarizada
+function generarGrafica(labels, data) {
+    const ctx = document.getElementById('graficaError').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Aproximación de la Raíz (Parte Real de x3)',
+                data: data,
+                borderColor: '#2F6DB3', 
+                backgroundColor: 'rgba(47, 109, 179, 0.1)',
+                fill: true,
+                borderWidth: 2,
+                pointRadius: 4,
+                tension: 0.2
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { 
+                y: { beginAtZero: false, title: { display: true, text: 'Valor Real de x3' } },
+                x: { title: { display: true, text: 'Iteración' } }
+            } 
+        }
+    });
 }
 
 // --- FUNCIÓN EXPORTAR PDF ACTUALIZADA ---
@@ -291,7 +265,8 @@ function exportarPDF() {
         
         doc.setFontSize(14);
         doc.setTextColor(31, 58, 95);
-        doc.text("Gráfica de la Función", 14, finalY);
+        // CAMBIO: Título actualizado
+        doc.text("Gráfica de Aproximación de la Raíz", 14, finalY);
 
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, 80);
     }

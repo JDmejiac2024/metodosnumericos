@@ -54,7 +54,8 @@ function calcularReglaFalsa() {
         let iter = 0;
         
         let labels = [];
-        let dataError = [];
+        // CAMBIO: Ahora guardaremos xr para la gráfica
+        let dataRaiz = [];
         let pasosLog = "";
 
         while (error > tol && iter < maxIter) {
@@ -102,7 +103,7 @@ function calcularReglaFalsa() {
                     <td>${fb.toFixed(4)}</td>
                     <td style="font-weight:bold; color:#2C3E50">${xr.toFixed(4)}</td>
                     <td>${fxr.toFixed(4)}</td>
-                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
+                    <td>${iter === 0 ? '-' : Math.abs(tolCalculada).toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -113,7 +114,7 @@ function calcularReglaFalsa() {
             pasosLog += `  f(a)=${fa.toFixed(4)}, f(b)=${fb.toFixed(4)}\n`;
             pasosLog += `  Aplicando fórmula Regla Falsa -> xr = ${xr.toFixed(4)}\n`;
             if (iter > 0) {
-                pasosLog += `  Tolerancia (xr_ant - xr): ${xrAnt.toFixed(4)} - ${xr.toFixed(4)} = ${tolCalculada.toFixed(4)}\n`;
+                pasosLog += `  Tolerancia |xr_ant - xr|: |${xrAnt.toFixed(4)} - ${xr.toFixed(4)}| = ${Math.abs(tolCalculada).toFixed(4)}\n`;
             }
             
             // Decisión de cambio de intervalo
@@ -125,10 +126,9 @@ function calcularReglaFalsa() {
                 pasosLog += `  f(a)*f(xr) > 0. La raíz está entre [xr, b]. Nuevo a = ${xr.toFixed(4)}\n\n`;
             }
 
-            // Guardar datos para la gráfica (graficamos el valor absoluto de la tolerancia)
+            // CAMBIO: Guardar datos para la gráfica (xr en lugar de tolerancia)
             labels.push(iter + 1);
-            if(iter > 0) dataError.push(Math.abs(tolCalculada)); 
-            else dataError.push(null);
+            dataRaiz.push(parseFloat(xr.toFixed(4)));
 
             iter++;
         }
@@ -136,7 +136,7 @@ function calcularReglaFalsa() {
         pasoDiv.textContent = pasosLog;
         rootResult.textContent = `Raíz aprox: ${xr.toFixed(4)}`;
         
-        generarGrafica(labels, dataError);
+        generarGrafica(labels, dataRaiz);
 
     } catch (e) {
         msgError.textContent = "Error en la función. Revisa la sintaxis.";
@@ -165,10 +165,11 @@ function generarGrafica(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Tolerancia Absoluta',
+                // CAMBIO: Etiquetas y colores
+                label: 'Aproximación de la Raíz (xr)',
                 data: data,
-                borderColor: '#D64545',
-                backgroundColor: 'rgba(214, 69, 69, 0.1)',
+                borderColor: '#2F6DB3',
+                backgroundColor: 'rgba(47, 109, 179, 0.1)',
                 borderWidth: 2,
                 pointRadius: 4,
                 fill: true,
@@ -179,7 +180,8 @@ function generarGrafica(labels, data) {
             responsive: true, 
             maintainAspectRatio: false,
             scales: { 
-                y: { beginAtZero: true, title: { display: true, text: 'Tolerancia' } },
+                // CAMBIO: Título eje Y
+                y: { title: { display: true, text: 'Valor de xr' } },
                 x: { title: { display: true, text: 'Iteración' } }
             } 
         }
@@ -223,7 +225,8 @@ function exportarPDF() {
         // --- AGREGAR TÍTULO DE LA GRÁFICA ---
         doc.setFontSize(14);
         doc.setTextColor(44, 62, 80);
-        doc.text("Gráfica de Convergencia", 14, finalY);
+        // CAMBIO: Título PDF
+        doc.text("Gráfica de Aproximación de la Raíz", 14, finalY);
         
         // Insertar imagen
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);

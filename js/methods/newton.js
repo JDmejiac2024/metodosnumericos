@@ -63,7 +63,8 @@ function calcularNewton() {
         let xr = 0; 
         
         let labels = [];
-        let dataError = [];
+        // CAMBIO: Array para almacenar la raíz xr
+        let dataRaiz = [];
         let pasosLog = "";
 
         // --- BUCLE NEWTON-RAPHSON ---
@@ -131,9 +132,9 @@ function calcularNewton() {
 
             xi = xr;
             
+            // CAMBIO: Almacenar los datos para la gráfica (xr)
             labels.push(iter + 1);
-            if(iter > 0) dataError.push(tolCalculada);
-            else dataError.push(null);
+            dataRaiz.push(parseFloat(xr.toFixed(4)));
 
             iter++;
         }
@@ -141,7 +142,7 @@ function calcularNewton() {
         pasoDiv.textContent = pasosLog;
         rootResult.textContent = `Raíz aprox: ${xr.toFixed(4)}`; 
         
-        generarGrafica(labels, dataError);
+        generarGrafica(labels, dataRaiz);
 
     } catch (e) {
         msgError.textContent = "Error matemático: Revisa la sintaxis de f(x).";
@@ -171,10 +172,11 @@ function generarGrafica(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Tolerancia Absoluta',
+                // CAMBIO: Etiquetas y colores actualizados
+                label: 'Aproximación de la Raíz (xr)',
                 data: data,
-                borderColor: '#2FA36B',
-                backgroundColor: 'rgba(47, 163, 107, 0.1)',
+                borderColor: '#2F6DB3',
+                backgroundColor: 'rgba(47, 109, 179, 0.1)',
                 fill: true,
                 borderWidth: 2,
                 pointRadius: 4,
@@ -185,7 +187,8 @@ function generarGrafica(labels, data) {
             responsive: true,
             maintainAspectRatio: false,
             scales: { 
-                y: { beginAtZero: true, title: { display: true, text: 'Tolerancia' } },
+                // CAMBIO: Título eje Y
+                y: { beginAtZero: false, title: { display: true, text: 'Valor de xr' } },
                 x: { title: { display: true, text: 'Iteración' } }
             } 
         }
@@ -228,7 +231,8 @@ function exportarPDF() {
         
         doc.setFontSize(14);
         doc.setTextColor(31, 58, 95);
-        doc.text("Gráfica de Convergencia", 14, finalY);
+        // CAMBIO: Título PDF
+        doc.text("Gráfica de Aproximación de la Raíz", 14, finalY);
         
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }

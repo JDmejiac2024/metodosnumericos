@@ -61,7 +61,8 @@ function calcularBiseccion() {
         let iter = 0;
         
         let labels = [];
-        let dataError = [];
+        // CAMBIO: Ahora guardaremos xr en lugar de la tolerancia
+        let dataRaiz = []; 
         let pasosLog = ""; 
 
         while (error > tol && iter < maxIter) {
@@ -104,7 +105,7 @@ function calcularBiseccion() {
                     <td>${fb.toFixed(4)}</td>
                     <td style="font-weight:bold; color:#2C3E50">${xr.toFixed(4)}</td>
                     <td>${fxr.toFixed(4)}</td>
-                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
+                    <td>${iter === 0 ? '-' : Math.abs(tolCalculada).toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -114,7 +115,7 @@ function calcularBiseccion() {
             pasosLog += `  Intervalo: [${xi.toFixed(4)}, ${xu.toFixed(4)}]\n`;
             pasosLog += `  Raíz (xr): ${xr.toFixed(4)}\n`;
             if (iter > 0) {
-                pasosLog += `  Tolerancia (xr_ant - xr): ${xrAnt.toFixed(4)} - ${xr.toFixed(4)} = ${tolCalculada.toFixed(4)}\n`;
+                pasosLog += `  Tolerancia |xr_ant - xr|: |${xrAnt.toFixed(4)} - ${xr.toFixed(4)}| = ${Math.abs(tolCalculada).toFixed(4)}\n`;
             }
             
             // 3. Lógica de cambio de límites
@@ -126,10 +127,9 @@ function calcularBiseccion() {
                 pasosLog += `  Signo cambia a la derecha. Nuevo intervalo: [${xr.toFixed(4)}, ${xu.toFixed(4)}]\n\n`;
             }
 
-            // 4. Guardar datos para la gráfica
+            // 4. Guardar datos para la gráfica (AHORA GUARDAMOS XR)
             labels.push(iter + 1);
-            if(iter > 0) dataError.push(Math.abs(tolCalculada)); 
-            else dataError.push(null); 
+            dataRaiz.push(parseFloat(xr.toFixed(4))); 
 
             iter++;
         }
@@ -138,7 +138,7 @@ function calcularBiseccion() {
         pasoDiv.textContent = pasosLog;
         rootResult.textContent = `Raíz aprox: ${xr.toFixed(4)}`;
         
-        generarGrafica(labels, dataError);
+        generarGrafica(labels, dataRaiz);
 
     } catch (e) {
         msgError.textContent = "Error de sintaxis en la función. Usa formato JS: 'x^3 - 2*x', 'sin(x)', etc.";
@@ -174,10 +174,11 @@ function generarGrafica(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Tolerancia Absoluta',
+                // CAMBIO: Etiqueta y color para la raíz
+                label: 'Aproximación de la Raíz (xr)',
                 data: data,
-                borderColor: '#D64545',
-                backgroundColor: 'rgba(214, 69, 69, 0.1)',
+                borderColor: '#2F6DB3', // Azul para la raíz
+                backgroundColor: 'rgba(47, 109, 179, 0.1)',
                 borderWidth: 2,
                 pointRadius: 4,
                 tension: 0.2,
@@ -189,8 +190,7 @@ function generarGrafica(labels, data) {
             maintainAspectRatio: false,
             scales: {
                 y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Tolerancia' }
+                    title: { display: true, text: 'Valor de xr' } // CAMBIO: Título del eje Y
                 },
                 x: {
                     title: { display: true, text: 'Iteración' }
@@ -220,6 +220,7 @@ function exportarPDF() {
     doc.text(`Intervalo Final: [${document.getElementById('xi').value}, ${document.getElementById('xu').value}]`, 14, 36);
     doc.text(`Raíz Aprox: ${document.getElementById('root-result').textContent}`, 14, 42);
 
+
     doc.autoTable({
         html: '#tabla-resultados',
         startY: 50,
@@ -243,7 +244,8 @@ function exportarPDF() {
 
         doc.setFontSize(14);
         doc.setTextColor(44, 62, 80);
-        doc.text("Gráfica de Convergencia", 14, finalY);
+        // CAMBIO: Título de la gráfica en el PDF
+        doc.text("Gráfica de Aproximación de la Raíz", 14, finalY);
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
 

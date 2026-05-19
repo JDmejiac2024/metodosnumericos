@@ -48,7 +48,8 @@ function calcularSecante() {
         let x_next = 0; // x_{i+1}
         
         let labels = [];
-        let dataError = [];
+        // CAMBIO: Array para almacenar la raíz (x_{i+1}) en cada paso
+        let dataRaiz = [];
         let pasosLog = "";
 
         // --- BUCLE SECANTE ---
@@ -100,7 +101,7 @@ function calcularSecante() {
                     <td>${f_prev.toFixed(4)}</td>
                     <td>${f_curr.toFixed(4)}</td>
                     <td style="font-weight:bold; color:#2C3E50">${x_next.toFixed(4)}</td>
-                    <td>${iter === 0 ? '-' : tolCalculada.toFixed(4)}</td>
+                    <td>${iter === 0 ? '-' : Math.abs(tolCalculada).toFixed(4)}</td>
                 </tr>
             `;
             tbody.innerHTML += fila;
@@ -112,7 +113,7 @@ function calcularSecante() {
             pasosLog += `  x_{i+1} = ${x_curr.toFixed(4)} - [${f_curr.toFixed(4)} * (${x_prev.toFixed(4)} - ${x_curr.toFixed(4)})] / (${f_prev.toFixed(4)} - ${f_curr.toFixed(4)}) = ${x_next.toFixed(4)}\n`;
             
             if (iter > 0) {
-                pasosLog += `  Tolerancia (x_i - x_{i+1}): ${x_curr.toFixed(4)} - ${x_next.toFixed(4)} = ${tolCalculada.toFixed(4)}\n\n`;
+                pasosLog += `  Tolerancia |x_i - x_{i+1}|: |${x_curr.toFixed(4)} - ${x_next.toFixed(4)}| = ${Math.abs(tolCalculada).toFixed(4)}\n\n`;
             } else {
                 pasosLog += `\n`;
             }
@@ -121,10 +122,9 @@ function calcularSecante() {
             x_prev = x_curr;
             x_curr = x_next;
             
-            // Datos Gráfica
+            // CAMBIO: Datos Gráfica guardando el valor de la raíz calculada
             labels.push(iter + 1);
-            if(iter > 0) dataError.push(Math.abs(tolCalculada));
-            else dataError.push(null);
+            dataRaiz.push(parseFloat(x_next.toFixed(4)));
 
             iter++;
         }
@@ -132,7 +132,7 @@ function calcularSecante() {
         pasoDiv.textContent = pasosLog;
         rootResult.textContent = `Raíz aprox: ${x_curr.toFixed(4)}`; 
         
-        generarGrafica(labels, dataError);
+        generarGrafica(labels, dataRaiz);
 
     } catch (e) {
         msgError.textContent = "Error matemático: Revisa la sintaxis de f(x).";
@@ -163,10 +163,11 @@ function generarGrafica(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Tolerancia Absoluta',
+                // CAMBIO: Título de la serie y color Azul estandarizado
+                label: 'Aproximación de la Raíz (xr)',
                 data: data,
-                borderColor: '#D64545', // Rojo estandarizado
-                backgroundColor: 'rgba(214, 69, 69, 0.1)',
+                borderColor: '#2F6DB3', 
+                backgroundColor: 'rgba(47, 109, 179, 0.1)',
                 fill: true,
                 borderWidth: 2,
                 pointRadius: 4,
@@ -177,7 +178,8 @@ function generarGrafica(labels, data) {
             responsive: true, 
             maintainAspectRatio: false,
             scales: { 
-                y: { beginAtZero: true, title: { display: true, text: 'Tolerancia' } },
+                // CAMBIO: Título del eje Y
+                y: { beginAtZero: false, title: { display: true, text: 'Valor de xr' } },
                 x: { title: { display: true, text: 'Iteración' } }
             } 
         }
@@ -218,7 +220,8 @@ function exportarPDF() {
         
         doc.setFontSize(14);
         doc.setTextColor(31, 58, 95);
-        doc.text("Gráfica de Convergencia", 14, finalY);
+        // CAMBIO: Título PDF
+        doc.text("Gráfica de Aproximación de la Raíz", 14, finalY);
         doc.addImage(imgData, 'PNG', 15, finalY + 5, 180, imgHeight);
     }
     doc.save("Secante_Reporte.pdf");
